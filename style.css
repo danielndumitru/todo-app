@@ -1,0 +1,756 @@
+:root {
+  --background: #101114;
+  --background2: linear-gradient(90deg, #4b6cb7 0%, #182848 100%);
+  --primary-color: #1c1d20;
+  --secondary-color: rgba(255, 255, 255, 0.3);
+  --secondary-color2: rgba(255, 255, 255, 0.6);
+  --accent-color: rgba(0, 255, 196, 0.8);
+  --accent-color-title: rgba(0, 255, 196, 1); /*#00ffc4; */
+  --text-color: #f9f9f9;
+}
+
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden; /* Prevent body scroll */
+}
+
+body {
+  background-image: url(./background/pawel-czerwinski-ZkzobNDayXo-unsplash.webp);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed; /* Keep background fixed while scrolling */
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 16pt;
+  color: var(--text-color);
+}
+
+.main {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  overflow: hidden;
+}
+
+h1 {
+  margin: 20px 0;
+  font-size: clamp(2rem, 5vw, 3rem); /* Responsive font size */
+  font-weight: 800;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--accent-color-title);
+}
+
+.wrapper {
+  flex: 1;
+  width: min(95vw, 1200px); /* Responsive width with max-width */
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 25px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 5);
+  backdrop-filter: blur(2.3px);
+  -webkit-backdrop-filter: blur(2.3px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 15px;
+  overflow: hidden;
+  margin-bottom: 10px; /* Space for footer */
+}
+
+#todo-input {
+  box-sizing: border-box;
+  padding: 12px 20px;
+  width: 100%;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 1000px;
+  font: inherit;
+  color: var(--text-color);
+  caret-color: var(--accent-color);
+  height: 45px;
+}
+#todo-input:focus {
+  outline: none;
+}
+
+form {
+  position: relative;
+  margin-bottom: 5px;
+  display: flex;
+  gap: 5px;
+  flex-direction: row !important; /* Force row direction even on mobile */
+}
+
+#add-button {
+  position: relative;
+  background-color: var(--accent-color);
+  width: auto;
+  height: 45px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 25px;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--background);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+  min-width: 80px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) {
+  #add-button:hover {
+    transform: scale(1.1);
+  }
+}
+
+@media (hover: none) {
+  #add-button:active {
+    transform: scale(1.1);
+  }
+
+  #add-button {
+    transform: scale(1);
+  }
+}
+
+.todo {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 12px;
+  background: rgba(21, 21, 21, 0.7);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 45px; /* Base height */
+  transition: all 0.3s ease;
+  scroll-snap-align: start;
+}
+
+.todo.dragging {
+  opacity: 0.5;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.todo .todo-text {
+  flex: 1;
+  min-width: 0;
+  padding: 5px;
+  padding-right: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.form1 {
+  width: 60%;
+  position: relative;
+  display: flex;
+  flex-direction: column; /* Stack input and button vertically */
+  gap: 10px;
+  padding: 5px;
+  flex-grow: 1;
+}
+
+.form1-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input1 {
+  width: 100%;
+  padding: 10px 15px;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 1000px;
+  font: inherit;
+  color: var(--text-color);
+  caret-color: var(--accent-color);
+}
+
+/* .button1 {
+  padding: 3px;
+  background: none;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+} */
+
+/* .button1 svg {
+  transition: 600ms ease-in-out;
+} */
+
+/* .button1:hover svg {
+  fill: #00ffc4;
+} */
+
+#todo-list:focus-within > .todo:not(:focus-within) {
+  filter: blur(4px);
+  transition: 600ms ease-in-out;
+}
+
+#todo-list:focus-within > .form1 {
+  filter: none;
+  z-index: 1;
+}
+
+.form1:focus-within {
+  filter: none !important;
+  z-index: 1;
+}
+
+.todo-text {
+  overflow-x: auto;
+  scrollbar-width: 0.3rem;
+}
+
+.scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+  margin-right: -0.5rem;
+  margin-bottom: 5px;
+  scroll-behavior: smooth;
+  scroll-snap-type: y proximity;
+  min-height: 0;
+}
+
+.scroll::-webkit-scrollbar,
+.todo-text::-webkit-scrollbar {
+  width: 0.5rem;
+  height: 0.5rem;
+}
+
+.scroll::-webkit-scrollbar-thumb,
+.todo-text::-webkit-scrollbar-thumb {
+  background-color: var(--secondary-color);
+  border-radius: 0.3rem;
+}
+
+.scroll::-webkit-scrollbar-track,
+.todo-text::-webkit-scrollbar-track {
+  display: none;
+}
+
+.edit-button,
+.delete-button,
+.button1 {
+  padding: 3px;
+  background: none;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.edit-button svg,
+.delete-button svg,
+.button1 svg {
+  transition: 600ms ease-in-out;
+  fill: var(--secondary-color);
+}
+
+.edit-button:hover svg,
+.button1:hover svg,
+.description-button:hover svg {
+  fill: #00ffc4;
+}
+.delete-button:hover svg {
+  fill: #ff0033;
+}
+.custom-checkbox {
+  border: 2px solid var(--accent-color);
+  border-radius: 50%;
+  min-height: 20px;
+  min-width: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  transition: 600ms ease-in-out;
+  cursor: pointer;
+}
+
+input[type="checkbox"]:checked ~ .custom-checkbox {
+  background-color: var(--accent-color);
+}
+input[type="checkbox"]:checked ~ .custom-checkbox svg {
+  fill: var(--primary-color);
+}
+input[type="checkbox"]:checked ~ .todo-text {
+  text-decoration: line-through;
+  color: var(--secondary-color);
+}
+input[type="checkbox"] {
+  display: none;
+}
+
+.counter {
+  border: 0.06rem solid var(--secondary-color);
+  margin: 5px 0;
+}
+
+.counter-container {
+  height: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--secondary-color2);
+  padding: 0 10px;
+}
+
+.counter-container p {
+  align-self: center;
+}
+
+.counter-container button {
+  border: 0.1rem solid var(--secondary-color2);
+  border-radius: 1rem;
+  background-color: transparent;
+  color: var(--secondary-color2);
+  font-size: 0.9rem;
+  margin: 0;
+  padding: 0.3rem 0.8rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+}
+
+.counter-container button:hover {
+  transition: 600ms ease-in-out;
+}
+.counter-container button:hover {
+  border: 0.1rem solid #ff0033;
+  /* color: #ff0033; */
+}
+
+footer {
+  width: min(95vw, 1200px);
+  margin-top: auto;
+  border-radius: 0.5rem;
+  text-align: center;
+}
+
+.made-by,
+.author {
+  font-size: 1rem;
+  display: inline-block;
+  color: var(--secondary-color2);
+}
+
+.made-by {
+  margin-right: 0.5rem;
+}
+
+.author {
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+@media only screen and (max-width: 768px) {
+  body {
+    font-size: 14pt;
+  }
+
+  .main {
+    padding: 5px;
+  }
+
+  .wrapper {
+    width: 100%;
+    border-radius: 20px;
+    padding: 15px;
+  }
+
+  .todo {
+    padding: 8px;
+  }
+
+  #add-button {
+    position: static;
+    width: auto;
+    padding: 0 20px;
+    margin-top: 0;
+  }
+
+  .form1 {
+    width: 100%;
+  }
+
+  footer {
+    width: 100%;
+    text-align: center;
+  }
+
+  .made-by,
+  .author {
+    display: inline-block;
+    font-size: 0.9rem;
+  }
+
+  form {
+    flex-direction: row !important; /* Ensure row direction */
+  }
+
+  #add-button {
+    position: relative;
+    width: 45px;
+    margin-top: 0;
+  }
+}
+
+/* Small screens */
+@media only screen and (max-width: 480px) {
+  body {
+    font-size: 12pt;
+  }
+
+  .todo .todo-text {
+    font-size: 0.9rem;
+  }
+
+  .counter-container {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    height: auto;
+    padding: 5px;
+  }
+
+  .wrapper {
+    padding: 10px;
+  }
+
+  .made-by,
+  .author {
+    font-size: 0.8rem;
+  }
+}
+
+/* Height-based media query */
+@media screen and (max-height: 600px) {
+  h1 {
+    margin: 10px 0;
+    font-size: clamp(1.5rem, 4vw, 2rem);
+  }
+
+  .wrapper {
+    padding: 10px;
+  }
+}
+
+/* Update existing search input styles */
+#search-input {
+  flex: 1;
+  min-width: 65%;
+  box-sizing: border-box;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 1000px;
+  font: inherit;
+  color: var(--text-color);
+  caret-color: var(--accent-color);
+}
+
+#search-input:focus {
+  outline: none;
+}
+
+/* Update existing sort select styles */
+#sort-select {
+  /* width: auto; */
+  min-width: 25%;
+  height: 42px; /* Match search input height (including borders) */
+  padding: 0 5px; /* Match search input padding */
+  background: rgba(21, 21, 21, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 25px;
+  color: var(--text-color);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  backdrop-filter: blur(2.3px);
+  -webkit-backdrop-filter: blur(2.3px);
+  transition: transform 0.2s ease;
+  outline: none;
+}
+
+/* Add hover effect to match add button */
+#sort-select:hover {
+  transform: scale(1.1);
+}
+
+/* Style the select options */
+#sort-select option {
+  background: rgba(21, 21, 21, 0.9);
+  color: var(--text-color);
+  padding: 0px 8px;
+}
+
+.completed-separator {
+  width: 100%;
+  margin: 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0.7;
+  scroll-snap-align: start;
+}
+
+.completed-separator hr {
+  flex: 1;
+  border: none;
+  height: 1px;
+  background: var(--secondary-color);
+}
+
+.completed-separator span {
+  color: var(--secondary-color2);
+  font-size: 0.9rem;
+  white-space: nowrap;
+  padding: 0 10px;
+}
+
+/* Style for completed todos */
+.todo.completed {
+  opacity: 0.7;
+  background: rgba(21, 21, 21, 0.5);
+}
+
+/* Add animation keyframes */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(5px);
+  }
+  75% {
+    transform: translateX(-5px);
+  }
+}
+
+/* Add styles for drag and drop */
+.todo {
+  animation: slideIn 0.3s ease-out;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.todo.dragging {
+  opacity: 0.5;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Add styles for description */
+.todo-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.todo-description {
+  font-size: 0.8em;
+  color: var(--secondary-color2);
+  margin-top: 2px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.todo-description.has-description {
+  color: var(--text-color);
+}
+
+.description-button {
+  padding: 3px;
+  background: none;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.description-button:hover {
+  transform: scale(1.1);
+}
+
+/* Add animation classes */
+.todo-deleted {
+  animation: slideIn 0.3s ease-out reverse;
+}
+
+.todo-completed {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.todo-error {
+  animation: shake 0.3s ease-in-out;
+}
+
+/* Update existing button hover effects */
+.edit-button:hover,
+.delete-button:hover,
+.description-button:hover,
+.button1:hover {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
+
+/* Add hover effect for draggable items */
+.todo:hover {
+  cursor: grab;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.todo:active {
+  cursor: grabbing;
+}
+
+/* Add styles for description input */
+.description-input {
+  font-size: 0.8em;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--accent-color);
+  color: var(--text-color);
+  padding: 2px 4px;
+  width: 100%;
+  outline: none;
+  font-family: inherit;
+}
+
+.description-input:focus {
+  background: rgba(0, 255, 196, 0.1);
+}
+
+.description-input::placeholder {
+  color: var(--secondary-color2);
+  opacity: 0.7;
+}
+
+/* Style for todo item when being edited */
+.todo:has(.form1) {
+  min-height: 100px; /* Increase height when editing */
+  padding: 16px; /* Increase padding */
+}
+
+/* Container for buttons */
+.button-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end; /* Align buttons to the right */
+  margin-top: 5px;
+}
+
+/* Add these styles to your existing CSS */
+.todo .button-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.todo .input1 {
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 1000px;
+  font: inherit;
+  color: var(--text-color);
+  caret-color: var(--accent-color);
+}
+
+.todo .input1:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+/* Add this new style to keep button1 SVG filled when todo is in edit mode */
+.todo:has(.input1) .button1 svg {
+  fill: #00ffc4;
+}
+
+/* Update the existing hover style to use :not(:has(.input1)) to prevent double fill */
+.button1:hover svg {
+  fill: #00ffc4;
+}
+
+.filter-wrapper {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+/* Style for description button when description is being edited */
+.todo:has(.description-input) .description-button svg {
+  fill: #00ffc4;
+}
+
+/* Update the existing hover styles to not override the active editing state */
+.description-button:hover svg {
+  fill: #00ffc4;
+}
+
+/* Add specific mobile styles */
+@media only screen and (max-width: 768px) {
+  .todo:has(.description-input) .description-button svg {
+    fill: #00ffc4;
+  }
+
+  /* Ensure the fill color reverts back after submission */
+  .todo:not(:has(.description-input)) .description-button svg {
+    fill: var(--secondary-color);
+  }
+}
