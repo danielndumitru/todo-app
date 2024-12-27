@@ -1,19 +1,19 @@
 const CACHE_NAME = "todo-app-v1";
 const ASSETS_TO_CACHE = [
-  "/",
-  "/index.html",
-  "/style.css",
-  "/app.js",
-  "/manifest.json",
-  "/background/pawel-czerwinski-ZkzobNDayXo-unsplash.JPG",
-  "/icons/icon-72x72.png",
-  "/icons/icon-96x96.png",
-  "/icons/icon-128x128.png",
-  "/icons/icon-144x144.png",
-  "/icons/icon-152x152.png",
-  "/icons/icon-192x192.png",
-  "/icons/icon-384x384.png",
-  "/icons/icon-512x512.png",
+  "./",
+  "./index.html",
+  "./style.css",
+  "./app.js",
+  "./manifest.json",
+  "./background/pawel-czerwinski-ZkzobNDayXo-unsplash.webp",
+  "./icons/icon-72x72.webp",
+  "./icons/icon-96x96.webp",
+  "./icons/icon-128x128.webp",
+  "./icons/icon-144x144.webp",
+  "./icons/icon-152x152.webp",
+  "./icons/icon-192x192.webp",
+  "./icons/icon-384x384.webp",
+  "./icons/icon-512x512.webp",
 ];
 
 // Install event - caching assets
@@ -22,13 +22,15 @@ self.addEventListener("install", (event) => {
     caches
       .open(CACHE_NAME)
       .then((cache) => {
-        console.log("Cache opened");
+        console.log("Caching app assets");
         return cache.addAll(ASSETS_TO_CACHE);
       })
       .catch((error) => {
         console.error("Cache installation failed:", error);
       })
   );
+  // Force the waiting service worker to become the active service worker
+  self.skipWaiting();
 });
 
 // Activate event - cleaning up old caches
@@ -45,6 +47,8 @@ self.addEventListener("activate", (event) => {
       );
     })
   );
+  // Tell the active service worker to take immediate control of all open clients
+  self.clients.claim();
 });
 
 // Fetch event - serving cached content
@@ -62,7 +66,7 @@ self.addEventListener("fetch", (event) => {
       // Make network request and cache the response
       return fetch(fetchRequest)
         .then((response) => {
-          // Check if response is valid
+          // Check if we received a valid response
           if (
             !response ||
             response.status !== 200 ||
@@ -81,9 +85,8 @@ self.addEventListener("fetch", (event) => {
           return response;
         })
         .catch(() => {
-          // If network request fails and no cache is available,
-          // you could return a custom offline page here
-          return new Response("You are offline");
+          // Return a custom offline page or fallback content
+          return caches.match("./index.html");
         });
     })
   );
