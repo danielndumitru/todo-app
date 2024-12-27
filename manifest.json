@@ -2,7 +2,7 @@
   "name": "Todo App",
   "short_name": "Todos",
   "description": "A modern and responsive todo list application",
-  "start_url": "./",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#101114",
