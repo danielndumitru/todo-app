@@ -382,7 +382,7 @@ footer {
   }
 
   .wrapper {
-    width: 100%;
+    width: 95%;
     border-radius: 20px;
     padding: 15px;
   }
@@ -467,7 +467,7 @@ footer {
 /* Update existing search input styles */
 #search-input {
   flex: 1;
-  min-width: 65%;
+  min-width: 60%;
   box-sizing: border-box;
   padding: 8px 16px;
   background: rgba(255, 255, 255, 0.1);
@@ -730,7 +730,7 @@ footer {
 
 .filter-wrapper {
   display: flex;
-  gap: 10px;
+  gap: 5px;
   margin-bottom: 15px;
   width: 100%;
 }
