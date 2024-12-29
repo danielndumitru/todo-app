@@ -687,3 +687,99 @@ function editDescription(todoIndex) {
   input.addEventListener("keydown", handleKeyDown);
   input.addEventListener("blur", handleBlur);
 }
+
+// Handle push notifications
+async function requestNotificationPermission() {
+  if (!("Notification" in window)) {
+    console.log("This browser does not support notifications");
+    return;
+  }
+
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission === "granted") {
+      const registration = await navigator.serviceWorker.ready;
+
+      // Get push subscription
+      let subscription = await registration.pushManager.getSubscription();
+
+      if (!subscription) {
+        // Create new subscription
+        const vapidPublicKey = "YOUR_VAPID_PUBLIC_KEY"; // You'll need to generate this
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+        });
+
+        // Send subscription to your server
+        await sendSubscriptionToServer(subscription);
+      }
+    }
+  } catch (error) {
+    console.error("Error requesting notification permission:", error);
+  }
+}
+
+// Handle app updates
+let updateAvailable = false;
+
+navigator.serviceWorker.addEventListener("message", (event) => {
+  if (event.data.type === "UPDATE_AVAILABLE") {
+    updateAvailable = true;
+    showUpdatePrompt(event.data.version);
+  }
+});
+
+function showUpdatePrompt(newVersion) {
+  const updatePrompt = document.createElement("div");
+  updatePrompt.className = "update-prompt show";
+  updatePrompt.innerHTML = `
+    <p class="update-prompt-text">A new version (${newVersion}) is available!</p>
+    <div class="update-prompt-buttons">
+      <button class="update-button">Update Now</button>
+      <button class="update-later-button">Later</button>
+    </div>
+  `;
+
+  document.body.appendChild(updatePrompt);
+
+  // Handle update button click
+  updatePrompt.querySelector(".update-button").addEventListener("click", () => {
+    // Clear cache and reload
+    caches
+      .keys()
+      .then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => caches.delete(cacheName))
+        );
+      })
+      .then(() => {
+        window.location.reload(true);
+      });
+  });
+
+  // Handle later button click
+  updatePrompt
+    .querySelector(".update-later-button")
+    .addEventListener("click", () => {
+      updatePrompt.remove();
+    });
+}
+
+// Utility function to convert VAPID key
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding)
+    .replace(/\-/g, "+")
+    .replace(/_/g, "/");
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+// Add update prompt styles to style.css

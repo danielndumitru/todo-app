@@ -1,0 +1,6 @@
+{
+  "version": "1.0.01",
+  "releaseNotes": "Added push notifications and update functionality",
+  "minVersion": "1.0.0",
+  "updateRequired": false
+}

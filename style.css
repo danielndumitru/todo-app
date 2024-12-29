@@ -844,3 +844,64 @@ footer {
     padding: 12px 15px;
   }
 }
+
+/* Add update prompt styles */
+.update-prompt {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 15px 20px;
+  display: none;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 1000;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  animation: slideIn 0.3s ease-out;
+}
+
+.update-prompt.show {
+  display: flex;
+}
+
+.update-prompt-text {
+  color: var(--text-color);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.update-prompt-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.update-button,
+.update-later-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.update-button {
+  background-color: var(--accent-color);
+  color: var(--background);
+  font-weight: 600;
+}
+
+.update-later-button {
+  background-color: transparent;
+  border: 1px solid var(--secondary-color);
+  color: var(--text-color);
+}
+
+.update-button:hover,
+.update-later-button:hover {
+  transform: scale(1.05);
+}

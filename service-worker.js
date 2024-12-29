@@ -1,4 +1,5 @@
-const CACHE_NAME = "todo-app-v1";
+const CACHE_NAME = "todo-app-v2";
+const APP_VERSION = "1.0.1";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
@@ -33,23 +34,96 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-// Activate event - cleaning up old caches
+// Activate event - cleaning up old caches and checking for updates
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log("Deleting old cache:", cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    Promise.all([
+      // Clean old caches
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheName !== CACHE_NAME) {
+              console.log("Deleting old cache:", cacheName);
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      }),
+      // Check for app updates
+      checkForUpdates(),
+    ])
   );
   // Tell the active service worker to take immediate control of all open clients
   self.clients.claim();
 });
+
+// Push notification event handler
+self.addEventListener("push", (event) => {
+  const options = {
+    body: event.data.text(),
+    icon: "./icons/icon-192x192.webp",
+    badge: "./icons/icon-72x72.webp",
+    vibrate: [100, 50, 100],
+    data: {
+      dateOfArrival: Date.now(),
+      primaryKey: "1",
+    },
+    actions: [
+      {
+        action: "explore",
+        title: "Open App",
+      },
+      {
+        action: "close",
+        title: "Close",
+      },
+    ],
+  };
+
+  event.waitUntil(self.registration.showNotification("Todo App", options));
+});
+
+// Notification click event handler
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+
+  if (event.action === "explore") {
+    event.waitUntil(
+      clients.matchAll({ type: "window" }).then((clientList) => {
+        for (const client of clientList) {
+          if (client.url === "/" && "focus" in client) {
+            return client.focus();
+          }
+        }
+        if (clients.openWindow) {
+          return clients.openWindow("/");
+        }
+      })
+    );
+  }
+});
+
+// Version check and update function
+async function checkForUpdates() {
+  try {
+    const response = await fetch("./version.json");
+    if (!response.ok) return;
+
+    const { version } = await response.json();
+    if (version !== APP_VERSION) {
+      // Notify all clients about the update
+      const clients = await self.clients.matchAll();
+      clients.forEach((client) => {
+        client.postMessage({
+          type: "UPDATE_AVAILABLE",
+          version: version,
+        });
+      });
+    }
+  } catch (error) {
+    console.error("Failed to check for updates:", error);
+  }
+}
 
 // Fetch event - serving cached content
 self.addEventListener("fetch", (event) => {
