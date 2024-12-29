@@ -15,6 +15,77 @@ if ("serviceWorker" in navigator) {
   });
 }
 
+let deferredPrompt;
+const installPromptContainer = document.createElement("div");
+installPromptContainer.className = "install-prompt";
+document.body.appendChild(installPromptContainer);
+
+// Create the prompt content
+installPromptContainer.innerHTML = `
+  <p class="install-prompt-text">Install Todo App for a better experience!</p>
+  <div class="install-prompt-buttons">
+    <button class="install-button">Install</button>
+    <button class="close-prompt-button">Not Now</button>
+  </div>
+`;
+
+// Handle the beforeinstallprompt event
+window.addEventListener("beforeinstallprompt", (e) => {
+  // Prevent Chrome 67 and earlier from automatically showing the prompt
+  e.preventDefault();
+  // Stash the event so it can be triggered later
+  deferredPrompt = e;
+
+  // Check if it's a mobile device and the app isn't already installed
+  if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    // Show the install prompt after a short delay
+    setTimeout(() => {
+      installPromptContainer.classList.add("show");
+    }, 2000);
+  }
+});
+
+// Handle install button click
+document
+  .querySelector(".install-button")
+  .addEventListener("click", async () => {
+    if (deferredPrompt) {
+      // Show the install prompt
+      deferredPrompt.prompt();
+      // Wait for the user to respond to the prompt
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`User response to the install prompt: ${outcome}`);
+      // Clear the deferredPrompt variable
+      deferredPrompt = null;
+      // Hide the install prompt
+      installPromptContainer.classList.remove("show");
+    }
+  });
+
+// Handle close button click
+document.querySelector(".close-prompt-button").addEventListener("click", () => {
+  installPromptContainer.classList.remove("show");
+  // Set a flag in localStorage to not show the prompt again for some time
+  localStorage.setItem("installPromptDismissed", Date.now());
+});
+
+// Check if the app is installed
+window.addEventListener("appinstalled", (evt) => {
+  console.log("Todo App was installed.");
+  installPromptContainer.classList.remove("show");
+  // You might want to track this event in your analytics
+});
+
+// Function to check if we should show the install prompt
+function shouldShowInstallPrompt() {
+  const lastDismissed = localStorage.getItem("installPromptDismissed");
+  if (!lastDismissed) return true;
+
+  // Show prompt again after 3 days
+  const threeDays = 3 * 24 * 60 * 60 * 1000;
+  return Date.now() - parseInt(lastDismissed) > threeDays;
+}
+
 // Step 1: Select the necessary DOM elements
 const todoForm = document.querySelector("form");
 const todoInput = document.getElementById("todo-input");

@@ -252,6 +252,7 @@ form {
   display: none;
 }
 
+.description-button,
 .edit-button,
 .delete-button,
 .button1 {
@@ -263,7 +264,7 @@ form {
   align-items: center;
   cursor: pointer;
 }
-
+.description-button svg,
 .edit-button svg,
 .delete-button svg,
 .button1 svg {
@@ -271,14 +272,24 @@ form {
   fill: var(--secondary-color);
 }
 
+.description-button:hover svg,
 .edit-button:hover svg,
-.button1:hover svg,
-.description-button:hover svg {
+.button1:hover svg {
   fill: #00ffc4;
 }
 .delete-button:hover svg {
   fill: #ff0033;
 }
+
+/* Update existing button hover effects */
+.edit-button:hover,
+.delete-button:hover,
+.description-button:hover,
+.button1:hover {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
+
 .custom-checkbox {
   border: 2px solid var(--accent-color);
   border-radius: 50%;
@@ -495,15 +506,17 @@ footer {
   font: inherit;
   font-size: 0.9rem;
   cursor: pointer;
-  /* backdrop-filter: blur(2.3px); */
-  /* -webkit-backdrop-filter: blur(2.3px); */
+  /* backdrop-filter: blur(2.3px);
+  -webkit-backdrop-filter: blur(2.3px); */
   transition: transform 0.2s ease;
   outline: none;
 }
 
 /* Add hover effect to match add button */
 #sort-select:hover {
-  transform: scale(1.1);
+  /* transform: scale(1.1); */
+  border: 1px solid var(--accent-color);
+  transition: 600ms ease-in-out;
 }
 
 /* Style the select options */
@@ -637,15 +650,6 @@ footer {
   animation: shake 0.3s ease-in-out;
 }
 
-/* Update existing button hover effects */
-.edit-button:hover,
-.delete-button:hover,
-.description-button:hover,
-.button1:hover {
-  transform: scale(1.1);
-  transition: transform 0.2s ease;
-}
-
 /* Add hover effect for draggable items */
 .todo:hover {
   cursor: grab;
@@ -754,5 +758,89 @@ footer {
   /* Ensure the fill color reverts back after submission */
   .todo:not(:has(.description-input)) .description-button svg {
     fill: var(--secondary-color);
+  }
+}
+
+/* Add these styles to your existing style.css */
+
+.install-prompt {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 15px 20px;
+  display: none; /* Hidden by default */
+  align-items: center;
+  gap: 15px;
+  z-index: 1000;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  max-width: 90%;
+  animation: slideUp 0.3s ease-out;
+}
+
+.install-prompt.show {
+  display: flex;
+}
+
+.install-prompt-text {
+  color: var(--text-color);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.install-prompt-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.install-button,
+.close-prompt-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.install-button {
+  background-color: var(--accent-color);
+  color: var(--background);
+  font-weight: 600;
+}
+
+.close-prompt-button {
+  background-color: transparent;
+  border: 1px solid var(--secondary-color);
+  color: var(--text-color);
+}
+
+.install-button:hover,
+.close-prompt-button:hover {
+  transform: scale(1.05);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@media (max-width: 480px) {
+  .install-prompt {
+    flex-direction: column;
+    text-align: center;
+    bottom: 10px;
+    padding: 12px 15px;
   }
 }
