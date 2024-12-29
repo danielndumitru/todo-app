@@ -59,11 +59,11 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.03);
   border-radius: 25px;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 5);
-  backdrop-filter: blur(2.3px);
-  -webkit-backdrop-filter: blur(2.3px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.15);
   padding: 15px;
   overflow: hidden;
@@ -488,15 +488,15 @@ footer {
   min-width: 25%;
   height: 42px; /* Match search input height (including borders) */
   padding: 0 5px; /* Match search input padding */
-  background: rgba(21, 21, 21, 0.7);
+  background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 25px;
   color: var(--text-color);
   font: inherit;
   font-size: 0.9rem;
   cursor: pointer;
-  backdrop-filter: blur(2.3px);
-  -webkit-backdrop-filter: blur(2.3px);
+  /* backdrop-filter: blur(2.3px); */
+  /* -webkit-backdrop-filter: blur(2.3px); */
   transition: transform 0.2s ease;
   outline: none;
 }

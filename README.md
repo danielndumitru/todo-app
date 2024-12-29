@@ -141,4 +141,4 @@ If you find any bugs or have feature requests, please open an issue on GitHub.
 
 ---
 
-Made with ❤️ by Daniel Dumitru
+Made by Daniel Dumitru
