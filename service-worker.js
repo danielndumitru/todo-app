@@ -1,11 +1,12 @@
 const CACHE_NAME = "todo-app-v2";
-const APP_VERSION = "1.0.1";
+const APP_VERSION = "2.0.0";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
   "./style.css",
   "./app.js",
   "./manifest.json",
+  "./version.json",
   "./background/pawel-czerwinski-ZkzobNDayXo-unsplash.webp",
   "./icons/icon-72x72.webp",
   "./icons/icon-96x96.webp",
@@ -17,44 +18,27 @@ const ASSETS_TO_CACHE = [
   "./icons/icon-512x512.webp",
 ];
 
-// Install event - caching assets
+// Install event - cache assets
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => {
-        console.log("Caching app assets");
-        return cache.addAll(ASSETS_TO_CACHE);
-      })
-      .catch((error) => {
-        console.error("Cache installation failed:", error);
-      })
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS_TO_CACHE);
+    })
   );
-  // Force the waiting service worker to become the active service worker
-  self.skipWaiting();
+  self.skipWaiting(); // Activate new service worker immediately
 });
 
-// Activate event - cleaning up old caches and checking for updates
+// Activate event - clean old caches
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    Promise.all([
-      // Clean old caches
-      caches.keys().then((cacheNames) => {
-        return Promise.all(
-          cacheNames.map((cacheName) => {
-            if (cacheName !== CACHE_NAME) {
-              console.log("Deleting old cache:", cacheName);
-              return caches.delete(cacheName);
-            }
-          })
-        );
-      }),
-      // Check for app updates
-      checkForUpdates(),
-    ])
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames
+          .filter((name) => name !== CACHE_NAME)
+          .map((name) => caches.delete(name))
+      );
+    })
   );
-  // Tell the active service worker to take immediate control of all open clients
-  self.clients.claim();
 });
 
 // Push notification event handler
@@ -103,67 +87,66 @@ self.addEventListener("notificationclick", (event) => {
   }
 });
 
-// Version check and update function
-async function checkForUpdates() {
-  try {
-    const response = await fetch("./version.json");
-    if (!response.ok) return;
-
-    const { version } = await response.json();
-    if (version !== APP_VERSION) {
-      // Notify all clients about the update
-      const clients = await self.clients.matchAll();
-      clients.forEach((client) => {
-        client.postMessage({
-          type: "UPDATE_AVAILABLE",
-          version: version,
-        });
-      });
-    }
-  } catch (error) {
-    console.error("Failed to check for updates:", error);
-  }
-}
-
-// Fetch event - serving cached content
+// Fetch event - serve from cache, then network
 self.addEventListener("fetch", (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      // Return cached version if found
-      if (response) {
-        return response;
-      }
-
-      // Clone the request because it can only be used once
-      const fetchRequest = event.request.clone();
-
-      // Make network request and cache the response
-      return fetch(fetchRequest)
+  if (event.request.url.includes("version.json")) {
+    // Always fetch version.json from network
+    event.respondWith(
+      fetch(event.request)
         .then((response) => {
-          // Check if we received a valid response
-          if (
-            !response ||
-            response.status !== 200 ||
-            response.type !== "basic"
-          ) {
-            return response;
-          }
-
-          // Clone the response because it can only be used once
-          const responseToCache = response.clone();
-
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-
           return response;
         })
         .catch(() => {
-          // Return a custom offline page or fallback content
-          return caches.match("./index.html");
+          return caches.match(event.request);
+        })
+    );
+    return;
+  }
+
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      // Return cached response if found
+      if (cachedResponse) {
+        // Check for updates in background
+        fetch(event.request).then((networkResponse) => {
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, networkResponse);
+          });
         });
+        return cachedResponse;
+      }
+
+      // Otherwise fetch from network
+      return fetch(event.request).then((response) => {
+        // Cache the network response
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
+        });
+        return response;
+      });
     })
   );
+});
+
+// Check for updates
+self.addEventListener("message", (event) => {
+  if (event.data === "CHECK_VERSION") {
+    fetch("./version.json")
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.version !== APP_VERSION) {
+          self.clients.matchAll().then((clients) => {
+            clients.forEach((client) => {
+              client.postMessage({
+                type: "UPDATE_AVAILABLE",
+                version: data.version,
+              });
+            });
+          });
+        }
+      });
+  }
 });
 
 // Handle background sync for todos
