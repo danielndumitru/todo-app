@@ -84,13 +84,18 @@ if ("serviceWorker" in navigator) {
           registration.scope
         );
 
+        // Check for updates immediately after registration
+        if (registration.active) {
+          registration.active.postMessage("CHECK_VERSION");
+        }
+
         // Check for updates periodically
         setInterval(() => {
           registration.update();
           if (registration.active) {
             registration.active.postMessage("CHECK_VERSION");
           }
-        }, 1000 * 60); // Check every minute
+        }, 1000 * 30); // Check every 30 seconds for testing
       })
       .catch((error) => {
         console.error("ServiceWorker registration failed:", error);
@@ -99,8 +104,9 @@ if ("serviceWorker" in navigator) {
 
   // Listen for messages from service worker
   navigator.serviceWorker.addEventListener("message", (event) => {
+    console.log("Received message from service worker:", event.data);
     if (event.data.type === "UPDATE_AVAILABLE") {
-      updateAvailable = true;
+      console.log("Update available:", event.data.version);
       showUpdatePrompt(event.data.version);
     }
   });

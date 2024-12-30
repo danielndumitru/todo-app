@@ -150,25 +150,31 @@ self.addEventListener("fetch", (event) => {
 // Check for updates
 self.addEventListener("message", (event) => {
   if (event.data === "CHECK_VERSION") {
-    // First update our APP_VERSION
-    updateAppVersion().then(() => {
-      fetch("./version.json?nocache=" + new Date().getTime())
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.version !== APP_VERSION) {
-            self.clients.matchAll().then((clients) => {
-              clients.forEach((client) => {
-                client.postMessage({
-                  type: "UPDATE_AVAILABLE",
-                  version: data.version,
-                  currentVersion: APP_VERSION,
-                });
+    fetch("./version.json?nocache=" + new Date().getTime())
+      .then((response) => response.json())
+      .then((data) => {
+        // Always notify if versions are different
+        if (data.version !== APP_VERSION) {
+          console.log("Version mismatch:", {
+            current: APP_VERSION,
+            new: data.version,
+          });
+
+          self.clients.matchAll().then((clients) => {
+            clients.forEach((client) => {
+              client.postMessage({
+                type: "UPDATE_AVAILABLE",
+                version: data.version,
+                currentVersion: APP_VERSION,
               });
             });
-          }
-        })
-        .catch((error) => console.error("Version check failed:", error));
-    });
+          });
+
+          // Update APP_VERSION after notification
+          APP_VERSION = data.version;
+        }
+      })
+      .catch((error) => console.error("Version check failed:", error));
   }
 });
 
