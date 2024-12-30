@@ -61,18 +61,6 @@ function getTodos() {
   return currentList?.todos || [];
 }
 
-function saveTodos() {
-  if (!todoLists[currentListId]) {
-    todoLists[currentListId] = {
-      name: "New List",
-      todos: [],
-      id: currentListId,
-    };
-  }
-  todoLists[currentListId].todos = [...allTodos];
-  saveTodoLists();
-}
-
 // Service Worker Registration
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
@@ -83,32 +71,10 @@ if ("serviceWorker" in navigator) {
           "ServiceWorker registered successfully:",
           registration.scope
         );
-
-        // Check for updates immediately after registration
-        if (registration.active) {
-          registration.active.postMessage("CHECK_VERSION");
-        }
-
-        // Check for updates periodically
-        setInterval(() => {
-          registration.update();
-          if (registration.active) {
-            registration.active.postMessage("CHECK_VERSION");
-          }
-        }, 1000 * 30); // Check every 30 seconds for testing
       })
       .catch((error) => {
         console.error("ServiceWorker registration failed:", error);
       });
-  });
-
-  // Listen for messages from service worker
-  navigator.serviceWorker.addEventListener("message", (event) => {
-    console.log("Received message from service worker:", event.data);
-    if (event.data.type === "UPDATE_AVAILABLE") {
-      console.log("Update available:", event.data.version);
-      showUpdatePrompt(event.data.version);
-    }
   });
 }
 
@@ -193,11 +159,10 @@ function addTodo() {
       completed: false,
       createdAt: new Date().toISOString(),
       description: "",
-      listId: currentListId, // Add listId to track which list it belongs to
+      listId: currentListId,
     };
 
-    allTodos.push(todoObject);
-    todoLists[currentListId].todos = [...allTodos];
+    todoLists[currentListId].todos.push(todoObject);
     saveTodoLists();
     updateTodoList();
     todoInput.value = "";
@@ -408,9 +373,17 @@ function deleteTodoItem(todoIndex) {
 
 // Step 9: Define a function to edit a todo item
 function onClick(todoIndex) {
-  const todoItem = document.getElementById(`txt-${todoIndex}`);
-  const existingText = allTodos[todoIndex].text;
-  const todoLi = todoItem.closest(".todo");
+  const todos = todoLists[currentListId].todos;
+  const todo = todos[todoIndex];
+
+  if (!todo) {
+    console.error("Todo not found:", todoIndex);
+    return;
+  }
+
+  const todoLi = document.querySelector(`.todo[data-id="${todo.id}"]`);
+  const todoItem = todoLi.querySelector(".todo-text");
+  const existingText = todo.text;
 
   // Keep the checkbox and its label
   const checkbox = todoLi.querySelector('input[type="checkbox"]');
@@ -471,8 +444,8 @@ function onClick(todoIndex) {
     e && e.preventDefault();
     const updatedText = input1.value.trim();
     if (updatedText) {
-      allTodos[todoIndex].text = updatedText;
-      saveTodos();
+      todo.text = updatedText; // Update the specific todo
+      saveTodoLists(); // Save using the list system
       updateTodoList();
     }
   };
@@ -517,77 +490,12 @@ function onClick(todoIndex) {
 // Step 10: Add an event listener for clearing all todos
 deleteAll.addEventListener("click", (e) => {
   e.preventDefault();
-  localStorage.clear(); // 11.1: Clear localStorage
-  allTodos = []; // 11.2: Reset the todos array
-  updateTodoList(); // 11.3: Update the UI
+  if (confirm("Are you sure you want to delete all todos in this list?")) {
+    todoLists[currentListId].todos = [];
+    saveTodoLists();
+    updateTodoList();
+  }
 });
-
-// Step 11: Define a function to save todos to localStorage
-function saveTodos() {
-  try {
-    console.log("Saving todos:", allTodos);
-    const todosJson = JSON.stringify(allTodos);
-    localStorage.setItem("todos", todosJson);
-    const savedTodos = localStorage.getItem("todos");
-    console.log("Saved todos:", JSON.parse(savedTodos));
-  } catch (error) {
-    console.error("Failed to save todos:", error);
-    alert("Failed to save todos. Storage might be full.");
-  }
-}
-
-// Step 12: Define a function to load todos from localStorage
-function getTodos() {
-  try {
-    const todos = localStorage.getItem("todos");
-    console.log("Loading todos:", todos ? JSON.parse(todos) : []);
-    return todos ? JSON.parse(todos) : [];
-  } catch (error) {
-    console.error("Failed to load todos:", error);
-    return [];
-  }
-}
-
-// Add the search function
-function filterTodos(searchText) {
-  const filteredTodos = allTodos.filter((todo) =>
-    todo.text.toLowerCase().includes(searchText.toLowerCase())
-  );
-  renderTodos(filteredTodos);
-}
-
-// Add event listener
-searchInput.addEventListener("input", (e) => filterTodos(e.target.value));
-
-// Modify updateTodoList to use a renderTodos function
-function renderTodos(todos) {
-  todoListUl.innerHTML = "";
-
-  // Always sort completed items to bottom regardless of other sorting
-  const sortedTodos = sortTodos(todos, sortSelect.value);
-
-  let hasCompletedTasks = false;
-  let currentIndex = 0; // Keep track of the actual index in allTodos
-
-  sortedTodos.forEach((todo) => {
-    // Find the actual index in allTodos array
-    const todoIndex = allTodos.findIndex((t) => t.id === todo.id);
-    const todoItem = createTodoItem(todo, todoIndex);
-
-    if (todo.completed && !hasCompletedTasks) {
-      const separator = document.createElement("div");
-      separator.className = "completed-separator";
-      separator.innerHTML = "<hr><span>Completed Tasks</span><hr>";
-      todoListUl.append(separator);
-      hasCompletedTasks = true;
-    }
-
-    todoListUl.append(todoItem);
-    currentIndex++;
-  });
-
-  todoCount.textContent = todos.length;
-}
 
 // Add sorting function
 function sortTodos(todos, sortBy) {
@@ -705,7 +613,15 @@ function handleDrop(e) {
 
 // Add description edit function
 function editDescription(todoIndex) {
-  const todoLi = document.getElementById(`txt-${todoIndex}`).closest(".todo");
+  const todos = todoLists[currentListId].todos;
+  const todo = todos[todoIndex];
+
+  if (!todo) {
+    console.error("Todo not found:", todoIndex);
+    return;
+  }
+
+  const todoLi = document.querySelector(`.todo[data-id="${todo.id}"]`);
   const descriptionP = todoLi.querySelector(".todo-description");
   const descButton = todoLi.querySelector(".description-button");
 
@@ -716,7 +632,7 @@ function editDescription(todoIndex) {
   }
 
   // Original description editing logic continues here...
-  const currentDesc = allTodos[todoIndex].description || "";
+  const currentDesc = todo.description || "";
   descriptionP.style.display = "none";
 
   const input = document.createElement("input");
@@ -738,25 +654,17 @@ function editDescription(todoIndex) {
   let isSubmitted = false;
 
   const handleSubmit = (e) => {
-    // Prevent default behavior and stop propagation
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
 
-    // Prevent multiple submissions
     if (isSubmitted) return;
     isSubmitted = true;
 
     const newDescription = input.value.trim();
-    allTodos[todoIndex].description = newDescription || "";
-
-    // Debug logs
-    console.log("Updating description for todo:", todoIndex);
-    console.log("New description:", newDescription);
-    console.log("Updated todo:", allTodos[todoIndex]);
-
-    saveTodos();
+    todo.description = newDescription || ""; // Update the specific todo
+    saveTodoLists(); // Save using the list system
 
     // Update UI
     descriptionP.textContent = newDescription || "Add description...";
@@ -857,12 +765,6 @@ navigator.serviceWorker.addEventListener("message", (event) => {
 });
 
 function showUpdatePrompt(newVersion) {
-  // Check if we already showed this version's prompt
-  const lastShownVersion = localStorage.getItem("lastShownUpdateVersion");
-  if (lastShownVersion === newVersion) {
-    return; // Don't show prompt for same version
-  }
-
   const updatePrompt = document.createElement("div");
   updatePrompt.className = "update-prompt show";
   updatePrompt.innerHTML = `
@@ -876,32 +778,19 @@ function showUpdatePrompt(newVersion) {
   document.body.appendChild(updatePrompt);
 
   // Handle update button click
-  updatePrompt
-    .querySelector(".update-button")
-    .addEventListener("click", async () => {
-      updatePrompt.remove();
-      // Store the version we're updating to
-      localStorage.setItem("lastShownUpdateVersion", newVersion);
-
-      try {
-        // Clear all caches
-        const cacheKeys = await caches.keys();
-        await Promise.all(cacheKeys.map((key) => caches.delete(key)));
-
-        // Unregister all service workers
-        const registration = await navigator.serviceWorker.getRegistration();
-        if (registration) {
-          await registration.unregister();
-        }
-
-        // Reload the page
+  updatePrompt.querySelector(".update-button").addEventListener("click", () => {
+    // Clear cache and reload
+    caches
+      .keys()
+      .then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => caches.delete(cacheName))
+        );
+      })
+      .then(() => {
         window.location.reload(true);
-      } catch (error) {
-        console.error("Update failed:", error);
-        // Remove the stored version if update failed
-        localStorage.removeItem("lastShownUpdateVersion");
-      }
-    });
+      });
+  });
 
   // Handle later button click
   updatePrompt
@@ -1120,11 +1009,3 @@ sortSelect.addEventListener("change", updateTodoList);
 // Initialize
 updateListSelect();
 updateTodoList();
-
-// Fetch and display version
-fetch("./version.json")
-  .then((response) => response.json())
-  .then((data) => {
-    document.getElementById("version-display").textContent = `v${data.version}`;
-  })
-  .catch((error) => console.error("Error fetching version:", error));

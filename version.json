@@ -1,6 +1,6 @@
 {
-  "version": "1.0.18",
-  "releaseNotes": "Added list management and improved caching",
+  "version": "1.0.012",
+  "releaseNotes": "Added push notifications and update functionality",
   "minVersion": "1.0.0",
   "updateRequired": false
 }

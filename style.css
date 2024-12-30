@@ -45,8 +45,7 @@ body {
 }
 
 h1 {
-  /* margin: 0; */
-  margin-bottom: 5px;
+  margin: 20px 0;
   font-size: clamp(2rem, 5vw, 3rem); /* Responsive font size */
   font-weight: 800;
   text-transform: uppercase;
@@ -99,7 +98,7 @@ form {
 .filter-wrapper {
   display: flex;
   gap: 5px;
-  margin-bottom: 5px;
+  margin-bottom: 15px;
   width: 100%;
 }
 
@@ -109,7 +108,7 @@ form {
 }
 
 #add-button {
-  width: 25%;
+  width: auto; /* Changed from auto to 25% */
   height: 45px;
   padding: 0 20px;
   background-color: var(--accent-color);
@@ -123,8 +122,25 @@ form {
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.2s ease;
   -webkit-tap-highlight-color: transparent;
   min-width: unset;
+}
+
+@media (hover: hover) {
+  #add-button:hover {
+    transform: scale(1.1);
+  }
+}
+
+@media (hover: none) {
+  #add-button:active {
+    transform: scale(1.1);
+  }
+
+  #add-button {
+    transform: scale(1);
+  }
 }
 
 .todo {
@@ -399,8 +415,8 @@ footer {
   }
 
   #add-button {
-    position: relative;
-    max-width: 25%;
+    position: static;
+    width: 25%;
     padding: 0 20px;
     margin-top: 0;
   }
@@ -1041,43 +1057,4 @@ footer {
   background-color: transparent;
   border: 1px solid var(--secondary-color);
   color: var(--text-color);
-}
-
-/* Update list selector styles */
-.list-buttons {
-  display: flex;
-  gap: 5px;
-  width: 25%;
-  padding: 0px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 25px;
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-}
-
-/* Adjust icon button styles */
-.icon-button {
-  background: none;
-  border: none;
-  padding: 8px;
-  cursor: pointer;
-  border-radius: 50%;
-  transition: background-color 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.icon-button:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.version-display {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  font-size: 0.7rem;
-  color: var(--secondary-color2);
-  font-family: monospace;
 }
