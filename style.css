@@ -45,7 +45,8 @@ body {
 }
 
 h1 {
-  margin: 20px 0;
+  /* margin: 0; */
+  margin-bottom: 5px;
   font-size: clamp(2rem, 5vw, 3rem); /* Responsive font size */
   font-weight: 800;
   text-transform: uppercase;
@@ -70,10 +71,18 @@ h1 {
   margin-bottom: 10px; /* Space for footer */
 }
 
+/* Update form styles */
+form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  width: 100%;
+}
+
 #todo-input {
+  width: 75%; /* Changed from 100% to 65% */
   box-sizing: border-box;
   padding: 12px 20px;
-  width: 100%;
   background: none;
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 1000px;
@@ -86,20 +95,24 @@ h1 {
   outline: none;
 }
 
-form {
-  position: relative;
-  margin-bottom: 5px;
+/* Update filter wrapper styles */
+.filter-wrapper {
   display: flex;
   gap: 5px;
-  flex-direction: row !important; /* Force row direction even on mobile */
+  margin-bottom: 5px;
+  width: 100%;
+}
+
+/* Update form margin to maintain spacing */
+form {
+  margin-bottom: 15px;
 }
 
 #add-button {
-  position: relative;
-  background-color: var(--accent-color);
-  width: auto;
+  width: 25%; /* Changed from auto to 25% */
   height: 45px;
   padding: 0 20px;
+  background-color: var(--accent-color);
   border: none;
   border-radius: 25px;
   font: inherit;
@@ -111,8 +124,8 @@ form {
   align-items: center;
   justify-content: center;
   transition: transform 0.2s ease;
-  min-width: 80px;
   -webkit-tap-highlight-color: transparent;
+  min-width: unset;
 }
 
 @media (hover: hover) {
@@ -403,8 +416,8 @@ footer {
   }
 
   #add-button {
-    position: static;
-    width: auto;
+    position: relative;
+    max-width: 25%;
     padding: 0 20px;
     margin-top: 0;
   }
@@ -428,11 +441,11 @@ footer {
     flex-direction: row !important; /* Ensure row direction */
   }
 
-  #add-button {
+  /* #add-button {
     position: relative;
-    width: 45px;
+    width: 25%;
     margin-top: 0;
-  }
+  } */
 }
 
 /* Small screens */
@@ -732,13 +745,6 @@ footer {
   fill: #00ffc4;
 }
 
-.filter-wrapper {
-  display: flex;
-  gap: 5px;
-  margin-bottom: 15px;
-  width: 100%;
-}
-
 /* Style for description button when description is being edited */
 .todo:has(.description-input) .description-button svg {
   fill: #00ffc4;
@@ -904,4 +910,182 @@ footer {
 .update-button:hover,
 .update-later-button:hover {
   transform: scale(1.05);
+}
+
+/* List controls styles */
+.list-controls {
+  width: 100%;
+  margin-bottom: 5px;
+  /* padding: 0 15px; */
+}
+
+.list-selector {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  max-width: 100%;
+}
+
+#list-select {
+  flex: 1;
+  padding: 10px 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 25px;
+  color: var(--text-color);
+  font-size: 1rem;
+  cursor: pointer;
+  outline: none;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+#list-select:focus {
+  border-color: var(--accent-color);
+}
+
+#list-select option {
+  background: var(--primary-color);
+  color: var(--text-color);
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-button svg {
+  fill: var(--secondary-color);
+  transition: fill 0.3s ease;
+}
+
+.icon-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.icon-button:hover svg {
+  fill: var(--accent-color);
+}
+
+/* Modal styles for list operations */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal.show {
+  display: flex;
+}
+
+.modal-content {
+  background: var(--primary-color);
+  padding: 20px;
+  border-radius: 15px;
+  width: min(90%, 400px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-title {
+  color: var(--text-color);
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--secondary-color);
+  cursor: pointer;
+  font-size: 1.5rem;
+  padding: 5px;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 10px 15px;
+  margin-bottom: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 25px;
+  color: var(--text-color);
+  font-size: 1rem;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.modal-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.modal-button.primary {
+  background-color: var(--accent-color);
+  color: var(--background);
+}
+
+.modal-button.secondary {
+  background-color: transparent;
+  border: 1px solid var(--secondary-color);
+  color: var(--text-color);
+}
+
+/* Update list selector styles */
+.list-buttons {
+  display: flex;
+  gap: 5px;
+  width: 25%;
+  padding: 0px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 25px;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+/* Adjust icon button styles */
+.icon-button {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-button:hover {
+  background: rgba(255, 255, 255, 0.1);
 }

@@ -1,4 +1,79 @@
-// Register Service Worker
+// List Management Variables and Functions
+let currentListId = "default";
+let todoLists = loadTodoLists();
+let allTodos = getTodos(); // Single declaration of allTodos
+let lastSelectedListId = localStorage.getItem("lastSelectedList") || "default";
+currentListId = lastSelectedListId; // Update initial currentListId
+
+// DOM Elements
+const todoForm = document.querySelector("form");
+const todoInput = document.getElementById("todo-input");
+const todoListUl = document.getElementById("todo-list");
+const deleteAll = document.getElementById("delete-all");
+const todoCount = document.getElementById("todo-count");
+
+// Create wrapper div for search and sort
+const filterWrapper = document.createElement("div");
+filterWrapper.className = "filter-wrapper";
+
+// Create search input
+const searchInput = document.createElement("input");
+searchInput.type = "text";
+searchInput.id = "search-input";
+searchInput.placeholder = "Search todos...";
+
+// Create sort select
+const sortSelect = document.createElement("select");
+sortSelect.id = "sort-select";
+sortSelect.innerHTML = `
+  <option value="newest">Newest First</option>
+  <option value="oldest">Oldest First</option>
+  <option value="alphabetical">Alphabetical</option>
+`;
+
+// Add elements to wrapper
+filterWrapper.appendChild(searchInput);
+filterWrapper.appendChild(sortSelect);
+
+// Insert wrapper before the form
+todoForm.before(filterWrapper);
+
+// List Management Functions
+function loadTodoLists() {
+  const lists = localStorage.getItem("todoLists");
+  return lists
+    ? JSON.parse(lists)
+    : {
+        default: {
+          name: "My Tasks", // Change default list name
+          todos: [],
+          id: "default",
+        },
+      };
+}
+
+function saveTodoLists() {
+  localStorage.setItem("todoLists", JSON.stringify(todoLists));
+}
+
+function getTodos() {
+  const currentList = todoLists[currentListId];
+  return currentList?.todos || [];
+}
+
+function saveTodos() {
+  if (!todoLists[currentListId]) {
+    todoLists[currentListId] = {
+      name: "New List",
+      todos: [],
+      id: currentListId,
+    };
+  }
+  todoLists[currentListId].todos = [...allTodos];
+  saveTodoLists();
+}
+
+// Service Worker Registration
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
@@ -86,50 +161,7 @@ function shouldShowInstallPrompt() {
   return Date.now() - parseInt(lastDismissed) > threeDays;
 }
 
-// Step 1: Select the necessary DOM elements
-const todoForm = document.querySelector("form");
-const todoInput = document.getElementById("todo-input");
-const todoListUl = document.getElementById("todo-list");
-const deleteAll = document.getElementById("delete-all");
-const todoCount = document.getElementById("todo-count");
-
-// Create wrapper div for search and sort
-const filterWrapper = document.createElement("div");
-filterWrapper.className = "filter-wrapper";
-
-// Create search input
-const searchInput = document.createElement("input");
-searchInput.type = "text";
-searchInput.id = "search-input";
-searchInput.placeholder = "Search todos...";
-
-// Create sort select
-const sortSelect = document.createElement("select");
-sortSelect.id = "sort-select";
-sortSelect.innerHTML = `
-  <option value="newest">Newest First</option>
-  <option value="oldest">Oldest First</option>
-  <option value="alphabetical">Alphabetical</option>
-`;
-
-// Add elements to wrapper
-filterWrapper.appendChild(searchInput);
-filterWrapper.appendChild(sortSelect);
-
-// Insert wrapper after the form
-todoForm.after(filterWrapper);
-
-// Step 2: Initialize the todos array by fetching saved todos
-let allTodos = getTodos(); // 2.1: Load saved todos from localStorage
-updateTodoList(); // 2.2: Update the UI with the loaded todos
-
-// Step 3: Add event listener for form submission
-todoForm.addEventListener("submit", function (e) {
-  e.preventDefault(); // 3.1: Prevent page reload on form submission
-  addTodo(); // 3.2: Call the function to add a new todo
-});
-
-// Step 4: Define the function to add a new todo
+// Todo Management Functions
 function addTodo() {
   try {
     const todoText = validateTodoText(todoInput.value.trim());
@@ -139,18 +171,19 @@ function addTodo() {
       completed: false,
       createdAt: new Date().toISOString(),
       description: "",
+      listId: currentListId, // Add listId to track which list it belongs to
     };
 
     allTodos.push(todoObject);
+    todoLists[currentListId].todos = [...allTodos];
+    saveTodoLists();
     updateTodoList();
-    saveTodos();
     todoInput.value = "";
   } catch (error) {
     alert(error.message);
   }
 }
 
-// Add after the addTodo function
 function validateTodoText(text) {
   if (text.length === 0) {
     throw new Error("Todo text cannot be empty");
@@ -236,34 +269,105 @@ function createTodoItem(todo, todoIndex) {
       return;
     }
 
-    // Update the todo's completed status
-    allTodos[todoIndex].completed = checkbox.checked;
-    todoLi.classList.toggle("completed", checkbox.checked);
-    saveTodos();
+    // Find the todo by ID instead of using index
+    const todoToUpdate = todoLists[currentListId].todos.find(
+      (t) => t.id === todo.id
+    );
+    if (todoToUpdate) {
+      todoToUpdate.completed = checkbox.checked;
+      todoLi.classList.toggle("completed", checkbox.checked);
+      saveTodoLists(); // Save directly to todoLists
 
-    // If we're currently filtering/searching, we need to update the filtered view
-    if (searchInput.value) {
-      filterTodos(searchInput.value);
-    } else {
-      updateTodoList();
+      // If we're currently filtering/searching, we need to update the filtered view
+      if (searchInput.value) {
+        filterTodos(searchInput.value);
+      } else {
+        updateTodoList();
+      }
     }
   });
 
   const deleteButton = todoLi.querySelector(".delete-button");
-  deleteButton.addEventListener("click", () => deleteTodoItem(todoIndex)); // 6.4: Add event listener for delete button
+  deleteButton.addEventListener("click", () => {
+    const index = todoLists[currentListId].todos.findIndex(
+      (t) => t.id === todo.id
+    );
+    if (index !== -1) {
+      todoLists[currentListId].todos.splice(index, 1);
+      saveTodoLists();
+      updateTodoList();
+    }
+  });
 
   const editButton = todoLi.querySelector(".edit-button");
-  editButton.addEventListener("click", () => onClick(todoIndex)); // 6.5: Add event listener for edit button
+  editButton.addEventListener("click", () => {
+    const index = todoLists[currentListId].todos.findIndex(
+      (t) => t.id === todo.id
+    );
+    if (index !== -1) {
+      onClick(index);
+    }
+  });
 
   const descButton = todoLi.querySelector(".description-button");
-  descButton.addEventListener("click", () => editDescription(todoIndex));
+  descButton.addEventListener("click", () => {
+    const index = todoLists[currentListId].todos.findIndex(
+      (t) => t.id === todo.id
+    );
+    if (index !== -1) {
+      editDescription(index);
+    }
+  });
 
   return todoLi; // 6.6: Return the created list item
 }
 
 // Step 7: Define a function to update the todo list UI
 function updateTodoList() {
-  renderTodos(allTodos);
+  todoListUl.innerHTML = "";
+
+  // Get todos for current list only
+  const currentTodos = todoLists[currentListId]?.todos || [];
+
+  // Update todo count
+  todoCount.textContent = currentTodos.length;
+
+  // Filter todos based on search
+  const searchTerm = searchInput.value.toLowerCase();
+  let filteredTodos = currentTodos.filter((todo) =>
+    todo.text.toLowerCase().includes(searchTerm)
+  );
+
+  // Sort todos
+  const sortValue = sortSelect.value;
+  filteredTodos.sort((a, b) => {
+    switch (sortValue) {
+      case "newest":
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      case "oldest":
+        return new Date(a.createdAt) - new Date(b.createdAt);
+      case "alphabetical":
+        return a.text.localeCompare(b.text);
+      default:
+        return 0;
+    }
+  });
+
+  // Group todos by completion status
+  const incompleteTodos = filteredTodos.filter((todo) => !todo.completed);
+  const completedTodos = filteredTodos.filter((todo) => todo.completed);
+
+  // Add incomplete todos first
+  incompleteTodos.forEach((todo, index) => {
+    todoListUl.appendChild(createTodoItem(todo, index));
+  });
+
+  // Add completed todos
+  completedTodos.forEach((todo, index) => {
+    todoListUl.appendChild(
+      createTodoItem(todo, index + incompleteTodos.length)
+    );
+  });
 }
 
 // Step 8: Define a function to delete a todo item
@@ -782,4 +886,196 @@ function urlBase64ToUint8Array(base64String) {
   return outputArray;
 }
 
-// Add update prompt styles to style.css
+// List Operations
+function createNewList(name) {
+  const id = "list_" + Date.now();
+  todoLists[id] = {
+    name: name,
+    todos: [],
+    id: id,
+  };
+  saveTodoLists();
+  localStorage.setItem("lastSelectedList", id); // Save as last selected list
+  updateListSelect();
+  switchList(id);
+}
+
+function updateListSelect() {
+  const select = document.getElementById("list-select");
+  select.innerHTML = "";
+
+  // Sort lists by creation date (most recent first)
+  const sortedLists = Object.entries(todoLists).sort(([idA, a], [idB, b]) => {
+    const aId = parseInt(a.id.split("_")[1] || 0);
+    const bId = parseInt(b.id.split("_")[1] || 0);
+    return bId - aId;
+  });
+
+  sortedLists.forEach(([id, list]) => {
+    const option = document.createElement("option");
+    option.value = id;
+    option.textContent = list.name;
+    option.selected = id === currentListId;
+    select.appendChild(option);
+  });
+}
+
+function switchList(listId) {
+  if (todoLists[listId]) {
+    currentListId = listId;
+    localStorage.setItem("lastSelectedList", listId); // Save last selected list
+    allTodos = [...todoLists[listId].todos];
+    updateTodoList();
+  } else {
+    console.error("List not found:", listId);
+  }
+}
+
+function deleteCurrentList() {
+  if (currentListId === "default") {
+    alert("Cannot delete the default list");
+    return;
+  }
+
+  if (
+    confirm(
+      `Are you sure you want to delete "${todoLists[currentListId].name}"?`
+    )
+  ) {
+    delete todoLists[currentListId];
+    saveTodoLists();
+
+    // Find the most recently created list (excluding the one being deleted)
+    const remainingLists = Object.entries(todoLists)
+      .filter(([id]) => id !== currentListId)
+      .sort(([, a], [, b]) => {
+        const aId = parseInt(a.id.split("_")[1] || 0);
+        const bId = parseInt(b.id.split("_")[1] || 0);
+        return bId - aId;
+      });
+
+    // Switch to the most recent list or default
+    const nextListId = remainingLists[0]?.[0] || "default";
+    currentListId = nextListId;
+    localStorage.setItem("lastSelectedList", nextListId);
+    allTodos = [...todoLists[nextListId].todos];
+    updateListSelect();
+    updateTodoList();
+  }
+}
+
+function editCurrentList(newName) {
+  if (!newName.trim()) {
+    alert("List name cannot be empty");
+    return;
+  }
+
+  const nameExists = Object.values(todoLists).some(
+    (list) => list.name === newName && list !== todoLists[currentListId]
+  );
+
+  if (nameExists) {
+    alert("A list with this name already exists");
+    return;
+  }
+
+  todoLists[currentListId].name = newName;
+  saveTodoLists();
+  updateListSelect();
+}
+
+// Modal functionality for list operations
+function showListModal(title, initialValue, onSave) {
+  const modal = document.createElement("div");
+  modal.className = "modal";
+  modal.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">${title}</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <input type="text" class="modal-input" placeholder="List name" value="${initialValue}" maxlength="30">
+      <div class="modal-buttons">
+        <button class="modal-button secondary">Cancel</button>
+        <button class="modal-button primary">Save</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  requestAnimationFrame(() => modal.classList.add("show"));
+
+  const input = modal.querySelector(".modal-input");
+  input.focus();
+  input.select(); // Select existing text when editing
+
+  function closeModal() {
+    modal.classList.remove("show");
+    setTimeout(() => modal.remove(), 300);
+  }
+
+  function handleSave() {
+    const name = input.value.trim();
+    if (name) {
+      onSave(name);
+      closeModal();
+    } else {
+      alert("Please enter a list name");
+      input.focus();
+    }
+  }
+
+  modal.querySelector(".modal-close").onclick = closeModal;
+  modal.querySelector(".modal-button.secondary").onclick = closeModal;
+  modal.querySelector(".modal-button.primary").onclick = handleSave;
+
+  // Close on background click
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  // Handle Enter and Escape keys
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      handleSave();
+    } else if (e.key === "Escape") {
+      closeModal();
+    }
+  });
+
+  // Prevent closing when clicking modal content
+  modal.querySelector(".modal-content").addEventListener("click", (e) => {
+    e.stopPropagation();
+  });
+}
+
+// Event Listeners
+todoForm.addEventListener("submit", function (e) {
+  e.preventDefault();
+  addTodo();
+});
+
+document.getElementById("list-select").addEventListener("change", (e) => {
+  switchList(e.target.value);
+});
+
+document.getElementById("new-list-button").addEventListener("click", () => {
+  showListModal("Create New List", "", (name) => createNewList(name));
+});
+
+document.getElementById("edit-list-button").addEventListener("click", () => {
+  showListModal("Edit List", todoLists[currentListId].name, (name) =>
+    editCurrentList(name)
+  );
+});
+
+document
+  .getElementById("delete-list-button")
+  .addEventListener("click", deleteCurrentList);
+
+searchInput.addEventListener("input", updateTodoList);
+sortSelect.addEventListener("change", updateTodoList);
+
+// Initialize
+updateListSelect();
+updateTodoList();
