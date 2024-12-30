@@ -851,6 +851,12 @@ navigator.serviceWorker.addEventListener("message", (event) => {
 });
 
 function showUpdatePrompt(newVersion) {
+  // Check if we already showed this version's prompt
+  const lastShownVersion = localStorage.getItem("lastShownUpdateVersion");
+  if (lastShownVersion === newVersion) {
+    return; // Don't show prompt for same version
+  }
+
   const updatePrompt = document.createElement("div");
   updatePrompt.className = "update-prompt show";
   updatePrompt.innerHTML = `
@@ -864,19 +870,32 @@ function showUpdatePrompt(newVersion) {
   document.body.appendChild(updatePrompt);
 
   // Handle update button click
-  updatePrompt.querySelector(".update-button").addEventListener("click", () => {
-    // Clear cache and reload
-    caches
-      .keys()
-      .then((cacheNames) => {
-        return Promise.all(
-          cacheNames.map((cacheName) => caches.delete(cacheName))
-        );
-      })
-      .then(() => {
+  updatePrompt
+    .querySelector(".update-button")
+    .addEventListener("click", async () => {
+      updatePrompt.remove();
+      // Store the version we're updating to
+      localStorage.setItem("lastShownUpdateVersion", newVersion);
+
+      try {
+        // Clear all caches
+        const cacheKeys = await caches.keys();
+        await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+
+        // Unregister all service workers
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration) {
+          await registration.unregister();
+        }
+
+        // Reload the page
         window.location.reload(true);
-      });
-  });
+      } catch (error) {
+        console.error("Update failed:", error);
+        // Remove the stored version if update failed
+        localStorage.removeItem("lastShownUpdateVersion");
+      }
+    });
 
   // Handle later button click
   updatePrompt

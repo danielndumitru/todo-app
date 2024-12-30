@@ -136,11 +136,13 @@ self.addEventListener("message", (event) => {
       .then((response) => response.json())
       .then((data) => {
         if (data.version !== APP_VERSION) {
+          // Check if we should notify about this version
           self.clients.matchAll().then((clients) => {
             clients.forEach((client) => {
               client.postMessage({
                 type: "UPDATE_AVAILABLE",
                 version: data.version,
+                currentVersion: APP_VERSION,
               });
             });
           });
