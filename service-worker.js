@@ -1,5 +1,5 @@
 const CACHE_NAME = "todo-app-v2";
-const APP_VERSION = "2.0.0";
+const APP_VERSION = "1.0.13";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
@@ -132,7 +132,7 @@ self.addEventListener("fetch", (event) => {
 // Check for updates
 self.addEventListener("message", (event) => {
   if (event.data === "CHECK_VERSION") {
-    fetch("./version.json")
+    fetch("./version.json?nocache=" + new Date().getTime())
       .then((response) => response.json())
       .then((data) => {
         if (data.version !== APP_VERSION) {
@@ -145,7 +145,8 @@ self.addEventListener("message", (event) => {
             });
           });
         }
-      });
+      })
+      .catch((error) => console.error("Version check failed:", error));
   }
 });
 

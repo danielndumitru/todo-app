@@ -83,10 +83,26 @@ if ("serviceWorker" in navigator) {
           "ServiceWorker registered successfully:",
           registration.scope
         );
+
+        // Check for updates periodically
+        setInterval(() => {
+          registration.update();
+          if (registration.active) {
+            registration.active.postMessage("CHECK_VERSION");
+          }
+        }, 1000 * 60); // Check every minute
       })
       .catch((error) => {
         console.error("ServiceWorker registration failed:", error);
       });
+  });
+
+  // Listen for messages from service worker
+  navigator.serviceWorker.addEventListener("message", (event) => {
+    if (event.data.type === "UPDATE_AVAILABLE") {
+      updateAvailable = true;
+      showUpdatePrompt(event.data.version);
+    }
   });
 }
 
