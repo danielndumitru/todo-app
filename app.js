@@ -1095,3 +1095,11 @@ sortSelect.addEventListener("change", updateTodoList);
 // Initialize
 updateListSelect();
 updateTodoList();
+
+// Fetch and display version
+fetch("./version.json")
+  .then((response) => response.json())
+  .then((data) => {
+    document.getElementById("version-display").textContent = `v${data.version}`;
+  })
+  .catch((error) => console.error("Error fetching version:", error));

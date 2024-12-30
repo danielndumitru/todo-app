@@ -1,6 +1,6 @@
 {
-  "version": "1.0.14",
+  "version": "1.0.15",
   "releaseNotes": "Added list management and improved caching",
   "minVersion": "1.0.0",
-  "updateRequired": true
+  "updateRequired": false
 }
