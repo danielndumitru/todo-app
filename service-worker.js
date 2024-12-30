@@ -1,5 +1,23 @@
 const CACHE_NAME = "todo-app-v2";
-const APP_VERSION = "1.0.13";
+let APP_VERSION = "1.0.0"; // Default version, will be updated
+
+// Function to fetch current version
+async function updateAppVersion() {
+  try {
+    const response = await fetch(
+      "./version.json?nocache=" + new Date().getTime()
+    );
+    const data = await response.json();
+    APP_VERSION = data.version;
+    console.log("App version updated to:", APP_VERSION);
+  } catch (error) {
+    console.error("Failed to fetch version:", error);
+  }
+}
+
+// Update version when service worker starts
+updateAppVersion();
+
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
@@ -132,23 +150,25 @@ self.addEventListener("fetch", (event) => {
 // Check for updates
 self.addEventListener("message", (event) => {
   if (event.data === "CHECK_VERSION") {
-    fetch("./version.json?nocache=" + new Date().getTime())
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.version !== APP_VERSION) {
-          // Check if we should notify about this version
-          self.clients.matchAll().then((clients) => {
-            clients.forEach((client) => {
-              client.postMessage({
-                type: "UPDATE_AVAILABLE",
-                version: data.version,
-                currentVersion: APP_VERSION,
+    // First update our APP_VERSION
+    updateAppVersion().then(() => {
+      fetch("./version.json?nocache=" + new Date().getTime())
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.version !== APP_VERSION) {
+            self.clients.matchAll().then((clients) => {
+              clients.forEach((client) => {
+                client.postMessage({
+                  type: "UPDATE_AVAILABLE",
+                  version: data.version,
+                  currentVersion: APP_VERSION,
+                });
               });
             });
-          });
-        }
-      })
-      .catch((error) => console.error("Version check failed:", error));
+          }
+        })
+        .catch((error) => console.error("Version check failed:", error));
+    });
   }
 });
 
