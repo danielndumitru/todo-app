@@ -1,5 +1,5 @@
-const CACHE_NAME = "todo-app-v1";
-const APP_VERSION = "1.0.14";
+const CACHE_NAME = "todo-app-v1.0.16";
+const APP_VERSION = "1.0.16";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
@@ -107,33 +107,48 @@ self.addEventListener("notificationclick", (event) => {
 // Version check and update function
 self.addEventListener("message", (event) => {
   if (event.data === "CHECK_VERSION") {
-    checkForUpdates();
+    event.waitUntil(checkForUpdates());
   }
 });
 
 // Function to check for updates
 async function checkForUpdates() {
   try {
-    const response = await fetch(
-      "./version.json?nocache=" + new Date().getTime()
-    );
-    const data = await response.json();
+    const response = await fetch("./version.json?t=" + Date.now());
+    if (!response.ok) throw new Error("Network response was not ok");
 
-    if (data.version !== APP_VERSION) {
+    const data = await response.json();
+    const serverVersion = data.version;
+
+    if (serverVersion !== APP_VERSION) {
+      console.log(`Update available: ${APP_VERSION} → ${serverVersion}`);
+
       // Notify all clients about the update
       const clients = await self.clients.matchAll();
-      clients.forEach((client) => {
+      for (const client of clients) {
         client.postMessage({
           type: "UPDATE_AVAILABLE",
-          version: data.version,
+          version: serverVersion,
           currentVersion: APP_VERSION,
+          updateRequired: data.updateRequired,
         });
-      });
+      }
+
+      // If update is required, force cache refresh
+      if (data.updateRequired) {
+        await caches.delete(CACHE_NAME);
+        await caches
+          .open(CACHE_NAME)
+          .then((cache) => cache.addAll(ASSETS_TO_CACHE));
+      }
     }
   } catch (error) {
     console.error("Version check failed:", error);
   }
 }
+
+// Add periodic version check (every 1 hour)
+setInterval(checkForUpdates, 60 * 60 * 1000);
 
 // Fetch event - serving cached content with network fallback
 self.addEventListener("fetch", (event) => {

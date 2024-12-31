@@ -780,22 +780,24 @@ function showUpdatePrompt(newVersion) {
 
   document.body.appendChild(updatePrompt);
 
-  // Handle update button click
   updatePrompt.querySelector(".update-button").addEventListener("click", () => {
     // Clear cache and reload
-    caches
-      .keys()
-      .then((cacheNames) => {
-        return Promise.all(
-          cacheNames.map((cacheName) => caches.delete(cacheName))
-        );
-      })
-      .then(() => {
-        window.location.reload(true);
-      });
+    if ("caches" in window) {
+      caches
+        .keys()
+        .then((cacheNames) => {
+          return Promise.all(
+            cacheNames.map((cacheName) => caches.delete(cacheName))
+          );
+        })
+        .then(() => {
+          window.location.reload(true);
+        });
+    } else {
+      window.location.reload(true);
+    }
   });
 
-  // Handle later button click
   updatePrompt
     .querySelector(".update-later-button")
     .addEventListener("click", () => {
@@ -1015,12 +1017,20 @@ updateTodoList();
 
 // Add this function to fetch and update the version
 function updateVersionDisplay() {
-  fetch("./version.json?nocache=" + new Date().getTime())
-    .then((response) => response.json())
+  fetch("./version.json?nocache=" + Date.now())
+    .then((response) => {
+      if (!response.ok) throw new Error("Network response was not ok");
+      return response.json();
+    })
     .then((data) => {
       versionDisplay.textContent = "v" + data.version;
+
+      // Check if current version matches server version
+      if (data.version !== APP_VERSION) {
+        showUpdatePrompt(data.version);
+      }
     })
-    .catch((error) => console.error("Error fetching version:", error));
+    .catch((error) => console.error("Version check failed:", error));
 }
 
 // Call it when the app starts
@@ -1029,8 +1039,29 @@ updateVersionDisplay();
 // Update version display when checking for updates
 navigator.serviceWorker.addEventListener("message", (event) => {
   if (event.data.type === "UPDATE_AVAILABLE") {
-    updateVersionDisplay(); // Update version display when new version is available
-    updateAvailable = true;
-    showUpdatePrompt(event.data.version);
+    updateVersionDisplay();
+
+    if (event.data.updateRequired) {
+      // Force update if required
+      window.location.reload();
+    } else {
+      showUpdatePrompt(event.data.version);
+    }
   }
+});
+
+// Add version checking function
+function checkForUpdates() {
+  if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage("CHECK_VERSION");
+  }
+}
+
+// Add periodic version check (every hour)
+setInterval(checkForUpdates, 60 * 60 * 1000);
+
+// Check for updates when the app starts
+document.addEventListener("DOMContentLoaded", () => {
+  updateVersionDisplay();
+  checkForUpdates();
 });
