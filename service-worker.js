@@ -1,5 +1,8 @@
-const CACHE_NAME = "todo-app-v1.0.16";
-const APP_VERSION = "1.0.16";
+// Update how we handle cache versioning
+const BASE_CACHE_NAME = "todo-app-v";
+let CACHE_NAME = BASE_CACHE_NAME + "1.0.16"; // Will be updated dynamically
+let APP_VERSION = "1.0.16"; // Will be updated from version.json
+
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
@@ -18,24 +21,42 @@ const ASSETS_TO_CACHE = [
   "./icons/icon-512x512.webp",
 ];
 
+// Function to check and update versions
+async function updateVersionInfo() {
+  try {
+    const response = await fetch(
+      "./version.json?nocache=" + new Date().getTime()
+    );
+    const data = await response.json();
+    APP_VERSION = data.version;
+    CACHE_NAME = BASE_CACHE_NAME + data.version;
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch version info:", error);
+    return null;
+  }
+}
+
 // Install event - caching assets
-self.addEventListener("install", (event) => {
+self.addEventListener("install", async (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => {
-        console.log("Caching app assets");
-        return cache.addAll(ASSETS_TO_CACHE);
-      })
-      .catch((error) => {
+    (async () => {
+      // Update version info before caching
+      await updateVersionInfo();
+
+      try {
+        const cache = await caches.open(CACHE_NAME);
+        console.log("Caching app assets for version:", APP_VERSION);
+        await cache.addAll(ASSETS_TO_CACHE);
+      } catch (error) {
         console.error("Cache installation failed:", error);
-      })
+      }
+    })()
   );
-  // Force the waiting service worker to become the active service worker
   self.skipWaiting();
 });
 
-// Activate event - cleaning up old caches and checking for updates
+// Activate event - cleaning up old caches
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     Promise.all([
@@ -43,20 +64,98 @@ self.addEventListener("activate", (event) => {
       caches.keys().then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
-            if (cacheName !== CACHE_NAME) {
+            if (
+              cacheName.startsWith(BASE_CACHE_NAME) &&
+              cacheName !== CACHE_NAME
+            ) {
               console.log("Deleting old cache:", cacheName);
               return caches.delete(cacheName);
             }
           })
         );
       }),
-      // Check for app updates
+      // Check for updates
       checkForUpdates(),
     ])
   );
-  // Tell the active service worker to take immediate control of all open clients
   self.clients.claim();
 });
+
+// Function to check for updates
+async function checkForUpdates() {
+  try {
+    const versionInfo = await updateVersionInfo();
+    if (!versionInfo) return;
+
+    const currentCache = await caches.has(CACHE_NAME);
+
+    if (versionInfo.version !== APP_VERSION || !currentCache) {
+      // Notify all clients about the update
+      const clients = await self.clients.matchAll();
+      clients.forEach((client) => {
+        client.postMessage({
+          type: "UPDATE_AVAILABLE",
+          version: versionInfo.version,
+          currentVersion: APP_VERSION,
+          cacheStatus: currentCache ? "outdated" : "missing",
+        });
+      });
+    }
+  } catch (error) {
+    console.error("Version check failed:", error);
+  }
+}
+
+// Message event handler
+self.addEventListener("message", async (event) => {
+  if (event.data === "CHECK_VERSION") {
+    await checkForUpdates();
+  } else if (event.data === "FORCE_UPDATE") {
+    await forceUpdate();
+  }
+});
+
+// Function to force update cache
+async function forceUpdate() {
+  try {
+    // Update version info
+    const versionInfo = await updateVersionInfo();
+    if (!versionInfo) return;
+
+    // Delete old caches
+    const cacheNames = await caches.keys();
+    await Promise.all(
+      cacheNames.map((cacheName) => {
+        if (cacheName.startsWith(BASE_CACHE_NAME)) {
+          return caches.delete(cacheName);
+        }
+      })
+    );
+
+    // Create new cache
+    const cache = await caches.open(CACHE_NAME);
+    await cache.addAll(ASSETS_TO_CACHE);
+
+    // Notify clients of successful update
+    const clients = await self.clients.matchAll();
+    clients.forEach((client) => {
+      client.postMessage({
+        type: "UPDATE_COMPLETED",
+        version: versionInfo.version,
+      });
+    });
+  } catch (error) {
+    console.error("Force update failed:", error);
+    // Notify clients of update failure
+    const clients = await self.clients.matchAll();
+    clients.forEach((client) => {
+      client.postMessage({
+        type: "UPDATE_FAILED",
+        error: error.message,
+      });
+    });
+  }
+}
 
 // Push notification event handler
 self.addEventListener("push", (event) => {
@@ -103,52 +202,6 @@ self.addEventListener("notificationclick", (event) => {
     );
   }
 });
-
-// Version check and update function
-self.addEventListener("message", (event) => {
-  if (event.data === "CHECK_VERSION") {
-    event.waitUntil(checkForUpdates());
-  }
-});
-
-// Function to check for updates
-async function checkForUpdates() {
-  try {
-    const response = await fetch("./version.json?t=" + Date.now());
-    if (!response.ok) throw new Error("Network response was not ok");
-
-    const data = await response.json();
-    const serverVersion = data.version;
-
-    if (serverVersion !== APP_VERSION) {
-      console.log(`Update available: ${APP_VERSION} → ${serverVersion}`);
-
-      // Notify all clients about the update
-      const clients = await self.clients.matchAll();
-      for (const client of clients) {
-        client.postMessage({
-          type: "UPDATE_AVAILABLE",
-          version: serverVersion,
-          currentVersion: APP_VERSION,
-          updateRequired: data.updateRequired,
-        });
-      }
-
-      // If update is required, force cache refresh
-      if (data.updateRequired) {
-        await caches.delete(CACHE_NAME);
-        await caches
-          .open(CACHE_NAME)
-          .then((cache) => cache.addAll(ASSETS_TO_CACHE));
-      }
-    }
-  } catch (error) {
-    console.error("Version check failed:", error);
-  }
-}
-
-// Add periodic version check (every 1 hour)
-setInterval(checkForUpdates, 60 * 60 * 1000);
 
 // Fetch event - serving cached content with network fallback
 self.addEventListener("fetch", (event) => {

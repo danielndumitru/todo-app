@@ -780,24 +780,22 @@ function showUpdatePrompt(newVersion) {
 
   document.body.appendChild(updatePrompt);
 
+  // Handle update button click
   updatePrompt.querySelector(".update-button").addEventListener("click", () => {
     // Clear cache and reload
-    if ("caches" in window) {
-      caches
-        .keys()
-        .then((cacheNames) => {
-          return Promise.all(
-            cacheNames.map((cacheName) => caches.delete(cacheName))
-          );
-        })
-        .then(() => {
-          window.location.reload(true);
-        });
-    } else {
-      window.location.reload(true);
-    }
+    caches
+      .keys()
+      .then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => caches.delete(cacheName))
+        );
+      })
+      .then(() => {
+        window.location.reload(true);
+      });
   });
 
+  // Handle later button click
   updatePrompt
     .querySelector(".update-later-button")
     .addEventListener("click", () => {
@@ -1017,20 +1015,12 @@ updateTodoList();
 
 // Add this function to fetch and update the version
 function updateVersionDisplay() {
-  fetch("./version.json?nocache=" + Date.now())
-    .then((response) => {
-      if (!response.ok) throw new Error("Network response was not ok");
-      return response.json();
-    })
+  fetch("./version.json?nocache=" + new Date().getTime())
+    .then((response) => response.json())
     .then((data) => {
       versionDisplay.textContent = "v" + data.version;
-
-      // Check if current version matches server version
-      if (data.version !== APP_VERSION) {
-        showUpdatePrompt(data.version);
-      }
     })
-    .catch((error) => console.error("Version check failed:", error));
+    .catch((error) => console.error("Error fetching version:", error));
 }
 
 // Call it when the app starts
@@ -1039,29 +1029,67 @@ updateVersionDisplay();
 // Update version display when checking for updates
 navigator.serviceWorker.addEventListener("message", (event) => {
   if (event.data.type === "UPDATE_AVAILABLE") {
-    updateVersionDisplay();
-
-    if (event.data.updateRequired) {
-      // Force update if required
-      window.location.reload();
-    } else {
-      showUpdatePrompt(event.data.version);
-    }
+    updateVersionDisplay(); // Update version display when new version is available
+    updateAvailable = true;
+    showUpdatePrompt(event.data.version);
   }
 });
 
-// Add version checking function
-function checkForUpdates() {
-  if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
-    navigator.serviceWorker.controller.postMessage("CHECK_VERSION");
-  }
+function handleAppUpdate(version) {
+  const updatePrompt = document.createElement("div");
+  updatePrompt.className = "update-prompt show";
+  updatePrompt.innerHTML = `
+    <p class="update-prompt-text">A new version (${version}) is available!</p>
+    <div class="update-prompt-buttons">
+      <button class="update-button">Update Now</button>
+      <button class="update-later-button">Later</button>
+    </div>
+  `;
+
+  document.body.appendChild(updatePrompt);
+
+  updatePrompt
+    .querySelector(".update-button")
+    .addEventListener("click", async () => {
+      try {
+        // Send force update message to service worker
+        const registration = await navigator.serviceWorker.ready;
+        registration.active.postMessage("FORCE_UPDATE");
+
+        // Show loading state
+        updatePrompt.querySelector(".update-prompt-text").textContent =
+          "Updating...";
+        updatePrompt.querySelector(".update-prompt-buttons").style.display =
+          "none";
+      } catch (error) {
+        console.error("Update failed:", error);
+        alert("Update failed. Please try again.");
+      }
+    });
+
+  updatePrompt
+    .querySelector(".update-later-button")
+    .addEventListener("click", () => {
+      updatePrompt.remove();
+    });
 }
 
-// Add periodic version check (every hour)
-setInterval(checkForUpdates, 60 * 60 * 1000);
-
-// Check for updates when the app starts
-document.addEventListener("DOMContentLoaded", () => {
-  updateVersionDisplay();
-  checkForUpdates();
+// Update the service worker message handler
+navigator.serviceWorker.addEventListener("message", (event) => {
+  if (event.data.type === "UPDATE_AVAILABLE") {
+    updateVersionDisplay();
+    handleAppUpdate(event.data.version);
+  } else if (event.data.type === "UPDATE_COMPLETED") {
+    // Reload the page to use the new version
+    window.location.reload();
+  } else if (event.data.type === "UPDATE_FAILED") {
+    alert("Update failed: " + event.data.error);
+  }
 });
+
+// Add periodic version check
+setInterval(() => {
+  if (navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage("CHECK_VERSION");
+  }
+}, 3600000); // Check every hour
