@@ -9,6 +9,21 @@
   --text-color: #f9f9f9;
 }
 
+/* Add this near the top of the file, after the :root section */
+.version-display {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  font-size: 0.8rem;
+  color: var(--secondary-color2);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 8px;
+  border-radius: 12px;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  z-index: 100;
+}
+
 /* Reset and base styles */
 * {
   margin: 0;
@@ -41,6 +56,7 @@ body {
   flex-direction: column;
   align-items: center;
   padding: 10px;
+  padding-top: 40px; /* Increased to make room for version display */
   overflow: hidden;
 }
 

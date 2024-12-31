@@ -1,11 +1,12 @@
-const CACHE_NAME = "todo-app-v2";
-const APP_VERSION = "1.0.1";
+const CACHE_NAME = "todo-app-v1";
+const APP_VERSION = "1.0.14";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
   "./style.css",
   "./app.js",
   "./manifest.json",
+  "./version.json",
   "./background/pawel-czerwinski-ZkzobNDayXo-unsplash.webp",
   "./icons/icon-72x72.webp",
   "./icons/icon-96x96.webp",
@@ -106,28 +107,35 @@ self.addEventListener("notificationclick", (event) => {
 // Version check and update function
 self.addEventListener("message", (event) => {
   if (event.data === "CHECK_VERSION") {
-    fetch("./version.json?nocache=" + new Date().getTime())
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.version !== APP_VERSION) {
-          self.clients.matchAll().then((clients) => {
-            clients.forEach((client) => {
-              client.postMessage({
-                type: "UPDATE_AVAILABLE",
-                version: data.version,
-                currentVersion: APP_VERSION,
-              });
-            });
-          });
-          // Update APP_VERSION after notification
-          APP_VERSION = data.version;
-        }
-      })
-      .catch((error) => console.error("Version check failed:", error));
+    checkForUpdates();
   }
 });
 
-// Fetch event - serving cached content
+// Function to check for updates
+async function checkForUpdates() {
+  try {
+    const response = await fetch(
+      "./version.json?nocache=" + new Date().getTime()
+    );
+    const data = await response.json();
+
+    if (data.version !== APP_VERSION) {
+      // Notify all clients about the update
+      const clients = await self.clients.matchAll();
+      clients.forEach((client) => {
+        client.postMessage({
+          type: "UPDATE_AVAILABLE",
+          version: data.version,
+          currentVersion: APP_VERSION,
+        });
+      });
+    }
+  } catch (error) {
+    console.error("Version check failed:", error);
+  }
+}
+
+// Fetch event - serving cached content with network fallback
 self.addEventListener("fetch", (event) => {
   event.respondWith(
     caches.match(event.request).then((response) => {

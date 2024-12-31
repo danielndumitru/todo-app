@@ -11,6 +11,7 @@ const todoInput = document.getElementById("todo-input");
 const todoListUl = document.getElementById("todo-list");
 const deleteAll = document.getElementById("delete-all");
 const todoCount = document.getElementById("todo-count");
+const versionDisplay = document.querySelector(".version-display");
 
 // Create wrapper div for search and sort
 const filterWrapper = document.createElement("div");
@@ -78,12 +79,13 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-let deferredPrompt;
+// 1. PWA Installation Management
+let deferredPrompt = null; // Store the beforeinstallprompt event
 const installPromptContainer = document.createElement("div");
 installPromptContainer.className = "install-prompt";
 document.body.appendChild(installPromptContainer);
 
-// Create the prompt content
+// 2. Create install prompt content
 installPromptContainer.innerHTML = `
   <p class="install-prompt-text">Install Todo App for a better experience!</p>
   <div class="install-prompt-buttons">
@@ -92,54 +94,51 @@ installPromptContainer.innerHTML = `
   </div>
 `;
 
-// Handle the beforeinstallprompt event
-window.addEventListener("beforeinstallprompt", (e) => {
-  // Prevent Chrome 67 and earlier from automatically showing the prompt
-  e.preventDefault();
-  // Stash the event so it can be triggered later
-  deferredPrompt = e;
+// 3. Handle beforeinstallprompt event
+window.addEventListener("beforeinstallprompt", (event) => {
+  // Store event for later use
+  deferredPrompt = event;
 
-  // Check if it's a mobile device and the app isn't already installed
-  if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-    // Show the install prompt after a short delay
-    setTimeout(() => {
-      installPromptContainer.classList.add("show");
-    }, 2000);
+  // Only show prompt if:
+  // - User hasn't dismissed it recently
+  // - User is on mobile device
+  // - App isn't already installed
+  if (shouldShowInstallPrompt() && isMobileDevice()) {
+    installPromptContainer.classList.add("show");
   }
 });
 
-// Handle install button click
+// 4. Handle install button click
 document
   .querySelector(".install-button")
   .addEventListener("click", async () => {
-    if (deferredPrompt) {
+    if (!deferredPrompt) return;
+
+    try {
       // Show the install prompt
-      deferredPrompt.prompt();
-      // Wait for the user to respond to the prompt
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log(`User response to the install prompt: ${outcome}`);
-      // Clear the deferredPrompt variable
+      const result = await deferredPrompt.prompt();
+      console.log(`Install prompt result: ${result.outcome}`);
+
+      // Clear the deferredPrompt
       deferredPrompt = null;
+
       // Hide the install prompt
       installPromptContainer.classList.remove("show");
+
+      // Save dismissal timestamp
+      localStorage.setItem("installPromptDismissed", Date.now().toString());
+    } catch (error) {
+      console.error("Install prompt error:", error);
     }
   });
 
-// Handle close button click
+// 5. Handle "Not Now" button click
 document.querySelector(".close-prompt-button").addEventListener("click", () => {
   installPromptContainer.classList.remove("show");
-  // Set a flag in localStorage to not show the prompt again for some time
-  localStorage.setItem("installPromptDismissed", Date.now());
+  localStorage.setItem("installPromptDismissed", Date.now().toString());
 });
 
-// Check if the app is installed
-window.addEventListener("appinstalled", (evt) => {
-  console.log("Todo App was installed.");
-  installPromptContainer.classList.remove("show");
-  // You might want to track this event in your analytics
-});
-
-// Function to check if we should show the install prompt
+// 6. Helper Functions
 function shouldShowInstallPrompt() {
   const lastDismissed = localStorage.getItem("installPromptDismissed");
   if (!lastDismissed) return true;
@@ -148,6 +147,17 @@ function shouldShowInstallPrompt() {
   const threeDays = 3 * 24 * 60 * 60 * 1000;
   return Date.now() - parseInt(lastDismissed) > threeDays;
 }
+
+function isMobileDevice() {
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+}
+
+// 7. Handle successful installation
+window.addEventListener("appinstalled", (event) => {
+  console.log("Todo App was installed successfully");
+  installPromptContainer.classList.remove("show");
+  deferredPrompt = null;
+});
 
 // Todo Management Functions
 function addTodo() {
@@ -502,33 +512,22 @@ function sortTodos(todos, sortBy) {
   const sortedTodos = [...todos];
   switch (sortBy) {
     case "newest":
-      return sortedTodos
-        .sort((a, b) => b.id - a.id)
-        .sort((a, b) => Number(a.completed) - Number(b.completed));
+      return sortedTodos.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
     case "oldest":
-      return sortedTodos
-        .sort((a, b) => a.id - b.id)
-        .sort((a, b) => Number(a.completed) - Number(b.completed));
+      return sortedTodos.sort(
+        (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+      );
     case "alphabetical":
-      return sortedTodos
-        .sort((a, b) => a.text.localeCompare(b.text))
-        .sort((a, b) => Number(a.completed) - Number(b.completed));
-    case "completed":
-      return sortedTodos.sort(
-        (a, b) => Number(a.completed) - Number(b.completed)
-      );
+      return sortedTodos.sort((a, b) => a.text.localeCompare(b.text));
     default:
-      return sortedTodos.sort(
-        (a, b) => Number(a.completed) - Number(b.completed)
-      );
+      return sortedTodos;
   }
 }
 
 // Add event listener
-sortSelect.addEventListener("change", (e) => {
-  const sortedTodos = sortTodos(allTodos, e.target.value);
-  renderTodos(sortedTodos);
-});
+sortSelect.addEventListener("change", updateTodoList);
 
 // Add drag and drop handler functions
 function handleDragStart(e) {
@@ -547,12 +546,14 @@ function handleDragOver(e) {
 
   // Get the dragged todo's completion status
   const draggedId = draggingItem.dataset.id;
-  const draggedTodo = allTodos.find((t) => t.id.toString() === draggedId);
+  // Use the current list's todos instead of allTodos
+  const currentTodos = todoLists[currentListId].todos;
+  const draggedTodo = currentTodos.find((t) => t.id.toString() === draggedId);
 
   // Filter siblings to only those with matching completion status
   const validSiblings = siblings.filter((sibling) => {
     const siblingId = sibling.dataset.id;
-    const siblingTodo = allTodos.find((t) => t.id.toString() === siblingId);
+    const siblingTodo = currentTodos.find((t) => t.id.toString() === siblingId);
     return siblingTodo.completed === draggedTodo.completed;
   });
 
@@ -579,8 +580,9 @@ function handleDrop(e) {
   const droppedId = e.target.closest(".todo").dataset.id;
 
   if (draggedId !== droppedId) {
-    const draggedTodo = allTodos.find((t) => t.id.toString() === draggedId);
-    const droppedTodo = allTodos.find((t) => t.id.toString() === droppedId);
+    const currentTodos = todoLists[currentListId].todos;
+    const draggedTodo = currentTodos.find((t) => t.id.toString() === draggedId);
+    const droppedTodo = currentTodos.find((t) => t.id.toString() === droppedId);
 
     // If trying to mix completed and incomplete tasks, don't allow the drop
     if (draggedTodo.completed !== droppedTodo.completed) {
@@ -594,7 +596,7 @@ function handleDrop(e) {
     }
 
     // Proceed with the reordering if both tasks have the same completion status
-    const newTodos = [...allTodos];
+    const newTodos = [...currentTodos];
     const draggedIndex = newTodos.findIndex(
       (t) => t.id.toString() === draggedId
     );
@@ -605,9 +607,10 @@ function handleDrop(e) {
     const [draggedItem] = newTodos.splice(draggedIndex, 1);
     newTodos.splice(droppedIndex, 0, draggedItem);
 
-    allTodos = newTodos;
-    saveTodos();
-    updateTodoList(); // Refresh the list to maintain proper order
+    // Update the current list's todos
+    todoLists[currentListId].todos = newTodos;
+    saveTodoLists();
+    updateTodoList();
   }
 }
 
@@ -1009,3 +1012,25 @@ sortSelect.addEventListener("change", updateTodoList);
 // Initialize
 updateListSelect();
 updateTodoList();
+
+// Add this function to fetch and update the version
+function updateVersionDisplay() {
+  fetch("./version.json?nocache=" + new Date().getTime())
+    .then((response) => response.json())
+    .then((data) => {
+      versionDisplay.textContent = "v" + data.version;
+    })
+    .catch((error) => console.error("Error fetching version:", error));
+}
+
+// Call it when the app starts
+updateVersionDisplay();
+
+// Update version display when checking for updates
+navigator.serviceWorker.addEventListener("message", (event) => {
+  if (event.data.type === "UPDATE_AVAILABLE") {
+    updateVersionDisplay(); // Update version display when new version is available
+    updateAvailable = true;
+    showUpdatePrompt(event.data.version);
+  }
+});
