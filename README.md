@@ -12,10 +12,27 @@ A modern and responsive todo list application with PWA support, drag-and-drop fu
 - 🔄 Drag and drop reordering of tasks
 - 🔍 Search and filter functionality
 - ⚡ Progressive Web App (PWA) support
+  - Automatic updates with version management
+  - Offline functionality
+  - Install prompts for mobile devices
+  - Push notifications support
 - 📝 Task descriptions support
 - ✅ Task completion tracking
 - 🗑️ Bulk delete functionality
-- 🌐 Offline functionality
+- 📋 Multiple todo lists support
+- 🔄 Auto-sync between tabs
+- 🎯 Smart install prompts
+- 🔔 Update notifications
+
+## Version Management
+
+The app includes a robust version management system that:
+
+- Displays current version in the top-left corner
+- Automatically checks for updates
+- Prompts users when updates are available
+- Handles cache updates seamlessly
+- Provides fallback for offline usage
 
 ## Installing as a PWA
 
@@ -41,8 +58,10 @@ A modern and responsive todo list application with PWA support, drag-and-drop fu
   - Newest First
   - Oldest First
   - Alphabetical
-- **Drag & Drop**: Reorder todos by dragging them (within their completion status section)
+- **Drag & Drop**: Reorder todos (within their completion status section)
 - **Bulk Delete**: Use the "Delete All" button to remove all todos
+- **Multiple Lists**: Create and manage multiple todo lists
+- **Auto Updates**: Receive notifications when updates are available
 
 ## Offline Support
 
@@ -51,17 +70,7 @@ The app works fully offline after the first visit:
 - All assets are cached using Service Workers
 - Tasks are stored in local storage
 - Changes made offline will persist
-- Full PWA functionality with offline support
-
-## Browser Support
-
-Tested and working on:
-
-- Chrome (desktop & mobile) v90+
-- Firefox v90+
-- Safari (desktop & mobile) v14+
-- Edge v90+
-- Opera v76+
+- Automatic sync when back online
 
 ## Technical Details
 
@@ -74,12 +83,23 @@ Tested and working on:
 - Local Storage API for data persistence
 - Drag and Drop API
 
+### Version Control
+
+The app implements a sophisticated version control system:
+
+- Version tracking through version.json
+- Automatic cache invalidation
+- Smart update prompts
+- Graceful degradation
+- Forced cache updates when necessary
+
 ### Performance
 
 - Optimized images using WebP format
 - Minimal dependencies (no external libraries)
 - Efficient DOM manipulation
 - Smooth animations and transitions
+- Smart caching strategies
 
 ## Development
 
@@ -93,8 +113,9 @@ Tested and working on:
 
 1. Clone the repository
 2. Make your changes
-3. Test in a browser
-4. For PWA testing, use a local server:
+3. Update version.json when making changes
+4. Test in a browser
+5. For PWA testing, use a local server:
 
 ```bash
 # Using Python
@@ -104,22 +125,26 @@ python -m http.server 8000
 npx serve
 ```
 
+### Version Update Process
+
+When updating the app:
+
+1. Increment version number in version.json
+2. Update releaseNotes if necessary
+3. Test update functionality
+4. Deploy changes
+5. Verify cache invalidation
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-### Code Style Guidelines
-
-- Use meaningful variable and function names
-- Comment complex logic
-- Follow existing code formatting
-- Test changes across different browsers
+3. Update version.json with new version number
+4. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+5. Push to the branch (`git push origin feature/AmazingFeature`)
+6. Open a Pull Request
 
 ## License
 

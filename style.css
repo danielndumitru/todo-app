@@ -1074,3 +1074,124 @@ footer {
   border: 1px solid var(--secondary-color);
   color: var(--text-color);
 }
+
+/* Help button styles */
+.help-button {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: var(--secondary-color2);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  z-index: 100;
+  transition: all 0.3s ease;
+}
+
+.help-button:hover {
+  background: var(--accent-color);
+  color: var(--background);
+}
+
+/* Help window styles */
+.help-window {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(90%, 600px);
+  max-height: 80vh;
+  background: var(--primary-color);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.help-window.show {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+.help-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.help-header h2 {
+  margin: 0;
+  color: var(--accent-color);
+  font-size: 1.2rem;
+}
+
+.close-help {
+  background: none;
+  border: none;
+  color: var(--secondary-color2);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0 5px;
+  transition: color 0.3s ease;
+}
+
+.close-help:hover {
+  color: var(--accent-color);
+}
+
+.help-content {
+  padding: 20px;
+  overflow-y: auto;
+  max-height: calc(80vh - 60px);
+}
+
+.help-content section {
+  margin-bottom: 20px;
+}
+
+.help-content h3 {
+  color: var(--accent-color);
+  margin-bottom: 10px;
+}
+
+.help-content ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.help-content ul ul {
+  padding-left: 20px;
+  margin-top: 5px;
+}
+
+.help-content li {
+  margin-bottom: 8px;
+  color: var(--text-color);
+  font-size: 0.9rem;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}

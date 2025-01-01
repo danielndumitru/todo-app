@@ -12,6 +12,9 @@ const todoListUl = document.getElementById("todo-list");
 const deleteAll = document.getElementById("delete-all");
 const todoCount = document.getElementById("todo-count");
 const versionDisplay = document.querySelector(".version-display");
+const helpButton = document.querySelector(".help-button");
+const helpWindow = document.querySelector(".help-window");
+const closeHelp = document.querySelector(".close-help");
 
 // Create wrapper div for search and sort
 const filterWrapper = document.createElement("div");
@@ -1093,3 +1096,30 @@ setInterval(() => {
     navigator.serviceWorker.controller.postMessage("CHECK_VERSION");
   }
 }, 3600000); // Check every hour
+
+// Add help window functionality
+helpButton.addEventListener("click", () => {
+  helpWindow.classList.add("show");
+});
+
+closeHelp.addEventListener("click", () => {
+  helpWindow.classList.remove("show");
+});
+
+// Close help window when clicking outside
+document.addEventListener("click", (e) => {
+  if (
+    helpWindow.classList.contains("show") &&
+    !helpWindow.contains(e.target) &&
+    e.target !== helpButton
+  ) {
+    helpWindow.classList.remove("show");
+  }
+});
+
+// Close help window on escape key
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && helpWindow.classList.contains("show")) {
+    helpWindow.classList.remove("show");
+  }
+});
