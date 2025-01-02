@@ -1,8 +1,9 @@
-// Update how we handle cache versioning
+// 1. Update cache versioning to match app version
 const BASE_CACHE_NAME = "todo-app-v";
-let CACHE_NAME = BASE_CACHE_NAME + "1.0.16"; // Will be updated dynamically
-let APP_VERSION = "1.0.16"; // Will be updated from version.json
+let CACHE_NAME = BASE_CACHE_NAME + "1.0.173"; // Will be updated from version.json
+let APP_VERSION = "1.0.173"; // Will be updated from version.json
 
+// 2. Assets to cache
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
@@ -21,15 +22,17 @@ const ASSETS_TO_CACHE = [
   "./icons/icon-512x512.webp",
 ];
 
-// Function to check and update versions
+// 3. Version check and cache update function
 async function updateVersionInfo() {
   try {
     const response = await fetch(
       "./version.json?nocache=" + new Date().getTime()
     );
     const data = await response.json();
+
+    // Update both APP_VERSION and CACHE_NAME
     APP_VERSION = data.version;
-    CACHE_NAME = BASE_CACHE_NAME + data.version;
+    CACHE_NAME = data.cacheVersion;
     return data;
   } catch (error) {
     console.error("Failed to fetch version info:", error);
@@ -37,7 +40,7 @@ async function updateVersionInfo() {
   }
 }
 
-// Install event - caching assets
+// 4. Install event - caching assets
 self.addEventListener("install", async (event) => {
   event.waitUntil(
     (async () => {
@@ -48,15 +51,15 @@ self.addEventListener("install", async (event) => {
         const cache = await caches.open(CACHE_NAME);
         console.log("Caching app assets for version:", APP_VERSION);
         await cache.addAll(ASSETS_TO_CACHE);
+        await self.skipWaiting(); // Force activation
       } catch (error) {
         console.error("Cache installation failed:", error);
       }
     })()
   );
-  self.skipWaiting();
 });
 
-// Activate event - cleaning up old caches
+// 5. Activate event - cleaning up old caches
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     Promise.all([
@@ -74,14 +77,15 @@ self.addEventListener("activate", (event) => {
           })
         );
       }),
+      // Take control of all clients
+      self.clients.claim(),
       // Check for updates
       checkForUpdates(),
     ])
   );
-  self.clients.claim();
 });
 
-// Function to check for updates
+// 6. Function to check for updates
 async function checkForUpdates() {
   try {
     const versionInfo = await updateVersionInfo();
@@ -89,8 +93,8 @@ async function checkForUpdates() {
 
     const currentCache = await caches.has(CACHE_NAME);
 
+    // Only notify if version mismatch or cache missing
     if (versionInfo.version !== APP_VERSION || !currentCache) {
-      // Notify all clients about the update
       const clients = await self.clients.matchAll();
       clients.forEach((client) => {
         client.postMessage({
@@ -106,23 +110,13 @@ async function checkForUpdates() {
   }
 }
 
-// Message event handler
-self.addEventListener("message", async (event) => {
-  if (event.data === "CHECK_VERSION") {
-    await checkForUpdates();
-  } else if (event.data === "FORCE_UPDATE") {
-    await forceUpdate();
-  }
-});
-
-// Function to force update cache
+// 7. Force update function
 async function forceUpdate() {
   try {
-    // Update version info
     const versionInfo = await updateVersionInfo();
     if (!versionInfo) return;
 
-    // Delete old caches
+    // Delete all existing caches
     const cacheNames = await caches.keys();
     await Promise.all(
       cacheNames.map((cacheName) => {
@@ -132,7 +126,7 @@ async function forceUpdate() {
       })
     );
 
-    // Create new cache
+    // Create new cache with current version
     const cache = await caches.open(CACHE_NAME);
     await cache.addAll(ASSETS_TO_CACHE);
 
@@ -146,7 +140,6 @@ async function forceUpdate() {
     });
   } catch (error) {
     console.error("Force update failed:", error);
-    // Notify clients of update failure
     const clients = await self.clients.matchAll();
     clients.forEach((client) => {
       client.postMessage({
