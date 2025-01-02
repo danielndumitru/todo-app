@@ -152,6 +152,11 @@ async function forceUpdate() {
 
 // Push notification event handler
 self.addEventListener("push", (event) => {
+  if (Notification.permission !== "granted") {
+    console.log("Notification permission not granted");
+    return;
+  }
+
   const options = {
     body: event.data.text(),
     icon: "./icons/icon-192x192.webp",
@@ -180,7 +185,17 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  if (event.action === "explore") {
+  if (event.action === "update") {
+    // Handle update action
+    event.waitUntil(
+      (async () => {
+        const clients = await self.clients.matchAll();
+        if (clients.length > 0) {
+          clients[0].postMessage({ type: "PERFORM_UPDATE" });
+        }
+      })()
+    );
+  } else if (event.action === "explore") {
     event.waitUntil(
       clients.matchAll({ type: "window" }).then((clientList) => {
         for (const client of clientList) {

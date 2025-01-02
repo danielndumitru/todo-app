@@ -735,30 +735,17 @@ async function requestNotificationPermission() {
     return;
   }
 
-  try {
-    const permission = await Notification.requestPermission();
-    if (permission === "granted") {
-      const registration = await navigator.serviceWorker.ready;
-
-      // Get push subscription
-      let subscription = await registration.pushManager.getSubscription();
-
-      if (!subscription) {
-        // Create new subscription
-        const vapidPublicKey = "YOUR_VAPID_PUBLIC_KEY"; // You'll need to generate this
-        subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
-        });
-
-        // Send subscription to your server
-        await sendSubscriptionToServer(subscription);
+  if (Notification.permission === "default") {
+    Notification.requestPermission().then((permission) => {
+      if (permission === "granted") {
+        console.log("Notification permission granted");
       }
-    }
-  } catch (error) {
-    console.error("Error requesting notification permission:", error);
+    });
   }
 }
+
+// Call when app initializes
+document.addEventListener("DOMContentLoaded", requestNotificationPermission);
 
 // Handle app updates
 let updateAvailable = false;
@@ -1051,15 +1038,35 @@ function handleAppUpdate(version) {
 
   document.body.appendChild(updatePrompt);
 
+  // Show notification if permission granted
+  if (Notification.permission === "granted") {
+    navigator.serviceWorker.ready.then((registration) => {
+      registration.showNotification("Todo App Update", {
+        body: `Version ${version} is available. Click to update.`,
+        icon: "./icons/icon-192x192.webp",
+        badge: "./icons/icon-72x72.webp",
+        requireInteraction: true,
+        actions: [
+          {
+            action: "update",
+            title: "Update Now",
+          },
+          {
+            action: "dismiss",
+            title: "Later",
+          },
+        ],
+      });
+    });
+  }
+
   updatePrompt
     .querySelector(".update-button")
     .addEventListener("click", async () => {
       try {
-        // Send force update message to service worker
         const registration = await navigator.serviceWorker.ready;
         registration.active.postMessage("FORCE_UPDATE");
 
-        // Show loading state
         updatePrompt.querySelector(".update-prompt-text").textContent =
           "Updating...";
         updatePrompt.querySelector(".update-prompt-buttons").style.display =
