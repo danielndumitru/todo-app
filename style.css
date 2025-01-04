@@ -87,17 +87,20 @@ h1 {
 }
 
 /* Update form styles */
-form {
-  display: flex;
+#todo-form {
+  /* display: flex; */
   gap: 10px;
   margin-bottom: 15px;
   width: 100%;
+  position: relative;
+  display: inline-block;
 }
 
 #todo-input {
-  width: 75%; /* Changed from 100% to 65% */
+  width: 100%;
   box-sizing: border-box;
   padding: 12px 20px;
+  padding-right: 50px;
   background: none;
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 1000px;
@@ -106,56 +109,146 @@ form {
   caret-color: var(--accent-color);
   height: 45px;
 }
+
 #todo-input:focus {
   outline: none;
 }
 
-/* Update filter wrapper styles */
-.filter-wrapper {
-  display: flex;
-  gap: 5px;
-  margin-bottom: 15px;
-  width: 100%;
-}
-
-/* Update form margin to maintain spacing */
-form {
-  margin-bottom: 15px;
-}
-
 #add-button {
-  width: auto; /* Changed from auto to 25% */
-  height: 45px;
-  padding: 0 20px;
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 35px;
+  height: 35px;
+  padding: 6px;
   background-color: var(--accent-color);
   border: none;
-  border-radius: 25px;
-  font: inherit;
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--background);
+  border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: transform 0.2s ease;
   -webkit-tap-highlight-color: transparent;
-  min-width: unset;
+  z-index: 2;
 }
 
+#add-button svg {
+  width: 20px;
+  height: 20px;
+  fill: var(--background);
+}
+
+/* Remove the ::before content since we're using SVG */
+#add-button::before {
+  content: none;
+}
+
+/* Update hover and active states */
 @media (hover: hover) {
   #add-button:hover {
-    transform: scale(1.1);
+    transform: translateY(-50%) scale(1.1);
   }
 }
 
 @media (hover: none) {
   #add-button:active {
-    transform: scale(1.1);
+    transform: translateY(-50%) scale(1.1);
+  }
+}
+
+/* Update responsive styles */
+/* @media only screen and (max-width: 768px) {
+  #todo-form {
+    /* display: flex; 
+    align-items: center;
+    position: relative;
+    display: inline-block;
+    margin-bottom: 15px;
+  }
+
+  #todo-input {
+    width: 100%;
+    font-size: 14px;
+    padding-right: 45px;
+    height: 42px;
   }
 
   #add-button {
-    transform: scale(1);
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    padding: 4px;
+    margin: 0;
+  }
+
+  #add-button svg {
+    width: 18px;
+    height: 18px;
+  }
+} */
+
+@media only screen and (max-width: 768px) {
+  #todo-form {
+    align-items: center;
+    position: relative; /* Ensure this is not being overridden */
+    display: inline-block;
+    margin-bottom: 15px;
+  }
+
+  #todo-input {
+    width: 100%;
+    font-size: 14px;
+    padding-right: 45px; /* Ensure there is enough space for the button */
+    height: 42px;
+  }
+
+  #add-button {
+    position: absolute; /* Check in developer tools if this rule is applied */
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    padding: 4px;
+    margin: 0;
+  }
+
+  #add-button svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  #todo-form {
+    margin-bottom: 12px;
+    position: relative;
+    display: inline-block;
+  }
+
+  #todo-input {
+    height: 40px;
+    padding-right: 42px;
+    font-size: 13px;
+  }
+
+  #add-button {
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    right: 6px;
+    padding: 4px;
+  }
+
+  #add-button svg {
+    width: 16px;
+    height: 16px;
   }
 }
 
@@ -411,6 +504,25 @@ footer {
   color: var(--text-color);
 }
 
+/* Update existing sort select styles */
+#sort-select {
+  /* width: auto; */
+  min-width: fit-content;
+  height: 42px; /* Match search input height (including borders) */
+  padding: 0 10px; /* Match search input padding */
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 25px;
+  color: var(--text-color);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  /* backdrop-filter: blur(2.3px);
+  -webkit-backdrop-filter: blur(2.3px); */
+  transition: transform 0.2s ease;
+  outline: none;
+}
+
 @media only screen and (max-width: 768px) {
   body {
     font-size: 14pt;
@@ -430,13 +542,6 @@ footer {
     padding: 8px;
   }
 
-  #add-button {
-    position: static;
-    width: 25%;
-    padding: 0 20px;
-    margin-top: 0;
-  }
-
   .form1 {
     width: 100%;
   }
@@ -452,15 +557,36 @@ footer {
     font-size: 0.9rem;
   }
 
-  form {
+  #todo-form {
+    position: relative;
+    display: inline-block;
     flex-direction: row !important; /* Ensure row direction */
   }
 
-  /* #add-button {
-    position: relative;
-    width: 25%;
+  #add-button {
+    position: absolute;
+    padding: 0;
+    /* width: 25%; */
     margin-top: 0;
-  } */
+  }
+
+  #sort-select {
+    /* width: auto; */
+    min-width: fit-content;
+    height: 40px; /* Match search input height (including borders) */
+    padding: 0 10px; /* Match search input padding */
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 25px;
+    color: var(--text-color);
+    font: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+    /* backdrop-filter: blur(2.3px);
+  -webkit-backdrop-filter: blur(2.3px); */
+    transition: transform 0.2s ease;
+    outline: none;
+  }
 }
 
 /* Small screens */
@@ -489,6 +615,25 @@ footer {
   .author {
     font-size: 0.8rem;
   }
+  #sort-select {
+    /* width: auto; */
+    min-width: fit-content;
+    height: 40px; /* Match search input height (including borders) */
+    padding: 0; /* Match search input padding */
+    padding-left: 10px;
+    padding-inline: 10px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 25px;
+    color: var(--text-color);
+    font: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+    /* backdrop-filter: blur(2.3px);
+  -webkit-backdrop-filter: blur(2.3px); */
+    transition: transform 0.2s ease;
+    outline: none;
+  }
 }
 
 /* Height-based media query */
@@ -506,37 +651,19 @@ footer {
 /* Update existing search input styles */
 #search-input {
   flex: 1;
-  min-width: 60%;
+  min-width: 45%;
   box-sizing: border-box;
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 5px;
+  background: rgb(15, 15, 15);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 1000px;
   font: inherit;
   color: var(--text-color);
   caret-color: var(--accent-color);
+  z-index: 3;
 }
 
 #search-input:focus {
-  outline: none;
-}
-
-/* Update existing sort select styles */
-#sort-select {
-  /* width: auto; */
-  min-width: 25%;
-  height: 42px; /* Match search input height (including borders) */
-  padding: 0 5px; /* Match search input padding */
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 25px;
-  color: var(--text-color);
-  font: inherit;
-  font-size: 0.9rem;
-  cursor: pointer;
-  /* backdrop-filter: blur(2.3px);
-  -webkit-backdrop-filter: blur(2.3px); */
-  transition: transform 0.2s ease;
   outline: none;
 }
 
@@ -1218,4 +1345,135 @@ footer {
     transform: translateY(0);
     opacity: 1;
   }
+}
+
+/* Add these new styles for the search functionality */
+.search-wrapper {
+  position: relative;
+  min-width: 40px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* Align icon to the right */
+}
+
+.search-icon {
+  position: relative; /* Change from absolute to relative */
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+}
+
+.search-icon svg {
+  fill: var(--secondary-color);
+  transition: fill 0.3s ease;
+}
+
+.search-icon:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.search-icon:hover svg {
+  fill: var(--accent-color);
+}
+
+.search-input {
+  position: absolute;
+  right: 100%; /* Position to the left of the icon */
+  width: 40px;
+  height: 100%;
+  padding: 8px 8px 8px 15px; /* Adjust left padding */
+  background: var(--primary-color); /* Solid background */
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 25px;
+  color: var(--text-color);
+  font: inherit;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  z-index: 3;
+}
+
+.search-wrapper.active .search-input {
+  width: calc(100vw - 115px); /* Adjust width to cover form container */
+  opacity: 1;
+  visibility: visible;
+  right: 100%; /* Stay positioned to the left of the icon */
+}
+
+/* Responsive adjustments */
+@media only screen and (max-width: 768px) {
+  .search-wrapper.active .search-input {
+    width: calc(100vw - 120px);
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  .search-wrapper.active .search-input {
+    width: calc(100vw - 95px);
+  }
+}
+
+/* Add these styles for better todo item structure */
+.todo-checkbox-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.todo-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Ensure labels are properly associated and styled */
+.todo-text {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  padding: 5px;
+  padding-right: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.form-wrapp {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+  margin-bottom: 0px;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+}
+.form-container {
+  display: flex;
+  flex-direction: row;
+  flex-grow: 1;
+  margin-bottom: 0;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Update filter wrapper styles */
+.filter-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+  margin-bottom: 15px;
+  width: 30%;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  width: 110px;
 }

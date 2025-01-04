@@ -6,7 +6,7 @@ let lastSelectedListId = localStorage.getItem("lastSelectedList") || "default";
 currentListId = lastSelectedListId; // Update initial currentListId
 
 // DOM Elements
-const todoForm = document.querySelector("form");
+const todoForm = document.querySelector("#todo-form");
 const todoInput = document.getElementById("todo-input");
 const todoListUl = document.getElementById("todo-list");
 const deleteAll = document.getElementById("delete-all");
@@ -20,27 +20,43 @@ const closeHelp = document.querySelector(".close-help");
 const filterWrapper = document.createElement("div");
 filterWrapper.className = "filter-wrapper";
 
-// Create search input
-const searchInput = document.createElement("input");
-searchInput.type = "text";
-searchInput.id = "search-input";
-searchInput.placeholder = "Search todos...";
-
-// Create sort select
+// Create sort select first
 const sortSelect = document.createElement("select");
 sortSelect.id = "sort-select";
 sortSelect.innerHTML = `
-  <option value="newest">Newest First</option>
-  <option value="oldest">Oldest First</option>
-  <option value="alphabetical">Alphabetical</option>
+  <option value="newest">New</option>
+  <option value="oldest">Old</option>
+  <option value="alphabetical">A-Z</option>
 `;
 
-// Add elements to wrapper
-filterWrapper.appendChild(searchInput);
-filterWrapper.appendChild(sortSelect);
+// Create search wrapper second
+const searchWrapper = document.createElement("div");
+searchWrapper.className = "search-wrapper";
 
-// Insert wrapper before the form
-todoForm.before(filterWrapper);
+const searchIcon = document.createElement("button");
+searchIcon.className = "search-icon";
+searchIcon.innerHTML = `
+  <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24">
+    <path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/>
+  </svg>
+`;
+
+const searchInput = document.createElement("input");
+searchInput.type = "text";
+searchInput.id = "search-input";
+searchInput.className = "search-input";
+searchInput.placeholder = "Search todos...";
+
+searchWrapper.appendChild(searchIcon);
+searchWrapper.appendChild(searchInput);
+
+// Add elements to wrapper in new order
+filterWrapper.appendChild(sortSelect);
+filterWrapper.appendChild(searchWrapper);
+
+// Insert wrapper after the form-container
+const formContainer = document.querySelector(".form-container");
+formContainer.after(filterWrapper);
 
 // List Management Functions
 function loadTodoLists() {
@@ -196,15 +212,12 @@ function validateTodoText(text) {
 
 // Step 5: Define a function to create a new todo item (HTML structure)
 function createTodoItem(todo, todoIndex) {
-  // 5.1: Generate unique IDs for the todo item and its associated elements
-  const todoId = "todo-" + todoIndex;
-  const txtId = "txt-" + todoIndex;
+  const checkboxId = `checkbox-${todoIndex}`;
 
-  // 5.2: Create a list item element and assign a class name
   const todoLi = document.createElement("li");
   todoLi.className = "todo";
-  todoLi.draggable = true; // Make item draggable
-  todoLi.dataset.id = todo.id; // Add ID for tracking
+  todoLi.draggable = true;
+  todoLi.dataset.id = todo.id;
 
   // Add drag event listeners
   todoLi.addEventListener("dragstart", handleDragStart);
@@ -212,17 +225,19 @@ function createTodoItem(todo, todoIndex) {
   todoLi.addEventListener("dragover", handleDragOver);
   todoLi.addEventListener("drop", handleDrop);
 
-  // 5.3: Add the HTML structure for the todo item
-  const todoText = todo.text; // Access the text property from the todo object
   todoLi.innerHTML = `
-    <input type="checkbox" id="${todoId}" />
-    <label class="custom-checkbox" for="${todoId}">
-      <svg fill="transparent" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px">
-        <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z" />
-      </svg>
-    </label>
+    <div class="todo-checkbox-wrapper">
+      <input type="checkbox" id="${checkboxId}" ${
+    todo.completed ? "checked" : ""
+  } />
+      <label class="custom-checkbox" for="${checkboxId}">
+        <svg fill="transparent" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px">
+          <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z" />
+        </svg>
+      </label>
+    </div>
     <div class="todo-content">
-    <label id="${txtId}" class="todo-text">${todoText}</label>
+      <label for="${checkboxId}" class="todo-text">${todo.text}</label>
       <p class="todo-description ${
         todo.description ? "has-description" : ""
       }">${todo.description || "Add description..."}</p>
@@ -1128,5 +1143,20 @@ document.addEventListener("click", (e) => {
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && helpWindow.classList.contains("show")) {
     helpWindow.classList.remove("show");
+  }
+});
+
+// Add click handler for search icon
+searchIcon.addEventListener("click", () => {
+  searchWrapper.classList.toggle("active");
+  if (searchWrapper.classList.contains("active")) {
+    searchInput.focus();
+  }
+});
+
+// Add blur handler to hide search when clicking outside
+document.addEventListener("click", (e) => {
+  if (!searchWrapper.contains(e.target)) {
+    searchWrapper.classList.remove("active");
   }
 });
