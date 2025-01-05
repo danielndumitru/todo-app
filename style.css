@@ -464,9 +464,8 @@ h1 {
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 45px; /* Base height */
+  min-height: 45px;
   transition: all 0.3s ease;
-  scroll-snap-align: start;
 }
 
 .todo.dragging {
@@ -1552,3 +1551,143 @@ footer {
 }
 
 /* Ensure search input takes full width when active */
+
+/* Hamburger menu styles */
+.hamburger-menu {
+  position: fixed;
+  top: 10px;
+  right: 44px;
+  z-index: 100;
+}
+
+.hamburger-button {
+  width: 24px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 5px;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
+}
+
+.hamburger-button span {
+  display: block;
+  width: 14px;
+  height: 2px;
+  background: var(--secondary-color2);
+  transition: all 0.3s ease;
+}
+
+.hamburger-button.active span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.hamburger-button.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-button.active span:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+.menu-content {
+  position: absolute;
+  top: 34px;
+  right: 0;
+  background: var(--primary-color);
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+}
+
+.hamburger-menu.active .menu-content {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  color: var(--text-color);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.menu-item svg {
+  fill: var(--secondary-color);
+  transition: fill 0.3s ease;
+}
+
+.menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.menu-item:hover svg {
+  fill: var(--accent-color);
+}
+
+/* Update todo item styles */
+.todo {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 45px;
+  transition: all 0.3s ease;
+}
+
+.todo-checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  pointer-events: auto; /* Enable events only for checkbox */
+}
+
+.todo-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  pointer-events: none; /* Disable events for content */
+}
+
+.todo-text {
+  pointer-events: none; /* Disable events for text */
+}
+
+/* Enable dragging on the todo item itself */
+.todo[draggable="true"] {
+  cursor: grab;
+}
+
+/* Style buttons container */
+.todo-buttons {
+  display: flex;
+  gap: 4px;
+  pointer-events: auto; /* Enable events for buttons */
+}

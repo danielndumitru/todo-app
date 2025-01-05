@@ -57,7 +57,7 @@ function loadTodoLists() {
     ? JSON.parse(lists)
     : {
         default: {
-          name: "My Tasks", // Change default list name
+          name: "My Lists", // Change default list name
           todos: [],
           id: "default",
         },
@@ -1170,4 +1170,31 @@ searchInput.addEventListener("focus", () => {
   searchInput.classList.add("active");
   todoForm.classList.add("invisible");
   sortSelect.classList.add("invisible");
+});
+
+// Add hamburger menu functionality
+const hamburgerButton = document.querySelector(".hamburger-button");
+const hamburgerMenu = document.querySelector(".hamburger-menu");
+
+hamburgerButton.addEventListener("click", (e) => {
+  e.stopPropagation();
+  hamburgerMenu.classList.toggle("active");
+  hamburgerButton.classList.toggle("active");
+});
+
+// Close menu when clicking outside
+document.addEventListener("click", (e) => {
+  if (!hamburgerMenu.contains(e.target)) {
+    hamburgerMenu.classList.remove("active");
+    hamburgerButton.classList.remove("active");
+  }
+});
+
+// Move the list control buttons to the hamburger menu
+const listButtons = document.querySelectorAll(".menu-item");
+listButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    hamburgerMenu.classList.remove("active");
+    hamburgerButton.classList.remove("active");
+  });
 });
