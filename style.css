@@ -72,10 +72,11 @@ h1 {
 .wrapper {
   flex: 1;
   width: min(95vw, 1200px); /* Responsive width with max-width */
+  max-width: 1200px;
   display: flex;
   flex-direction: column;
   gap: 5px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 25px;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 5);
   backdrop-filter: blur(10px);
@@ -83,20 +84,22 @@ h1 {
   border: 1px solid rgba(255, 255, 255, 0.15);
   padding: 15px;
   overflow: hidden;
-  margin-bottom: 10px; /* Space for footer */
+  margin-bottom: 5px; /* Space for footer */
 }
 
 /* Update form styles */
 #todo-form {
-  /* display: flex; */
-  gap: 10px;
-  margin-bottom: 15px;
-  width: 100%;
+  display: flex;
+  flex: 1;
   position: relative;
-  display: inline-block;
+  /* display: inline-block; */
+  /* left: 0px; */
+  /* right: 80px; */
+  margin-right: 0px;
+  background: none;
 }
 
-#todo-input {
+/* #todo-input {
   width: 100%;
   box-sizing: border-box;
   padding: 12px 20px;
@@ -107,7 +110,20 @@ h1 {
   font: inherit;
   color: var(--text-color);
   caret-color: var(--accent-color);
-  height: 45px;
+  height: 40px;
+} */
+#todo-input {
+  width: 100%; /* Take all remaining space */
+  padding: 10px 15px;
+  padding-right: 45px; /* Space for the button */
+  height: 40px;
+  font-size: 1rem;
+  background: none;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 1000px;
+  color: var(--text-color);
+  caret-color: var(--accent-color);
 }
 
 #todo-input:focus {
@@ -116,7 +132,7 @@ h1 {
 
 #add-button {
   position: absolute;
-  right: 5px;
+  right: 3px;
   top: 50%;
   transform: translateY(-50%);
   width: 35px;
@@ -131,7 +147,7 @@ h1 {
   justify-content: center;
   transition: transform 0.2s ease;
   -webkit-tap-highlight-color: transparent;
-  z-index: 2;
+  /* z-index: 2; */
 }
 
 #add-button svg {
@@ -158,53 +174,227 @@ h1 {
   }
 }
 
-/* Update responsive styles */
-/* @media only screen and (max-width: 768px) {
-  #todo-form {
-    /* display: flex; 
-    align-items: center;
-    position: relative;
-    display: inline-block;
-    margin-bottom: 15px;
-  }
+/* here sort-select and search-icon */
 
-  #todo-input {
-    width: 100%;
-    font-size: 14px;
-    padding-right: 45px;
-    height: 42px;
-  }
+.form-wrapp {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  /* gap: 5px; */
+  /* margin-bottom: 0px; */
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+}
 
-  #add-button {
-    position: absolute;
-    right: 6px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 30px;
-    height: 30px;
-    padding: 4px;
-    margin: 0;
-  }
+.form-container {
+  display: flex;
+  flex-direction: row;
+  /* position: relative; */
+  /* gap: 5px; */
+  /* margin-bottom: 0; */
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  /* padding: 0 5px; */
+}
 
-  #add-button svg {
-    width: 18px;
-    height: 18px;
-  }
+/* Update existing sort select styles  - original*/
+/* #sort-select {
+  position: absolute;
+  right: 40px;
+  top: 0;
+  min-width: fit-content;
+  height: 40px;
+  padding: 0 10px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 25px;
+  color: var(--text-color);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  outline: none;
+  margin-left: 10px;
 } */
 
+#search-input {
+  min-width: 40px;
+  height: 40px;
+  margin-right: 0px;
+}
+#sort-select {
+  min-width: 70px;
+  padding: 0 10px;
+  height: 40px;
+  margin-right: 0px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 25px;
+  color: var(--text-color);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  outline: none;
+}
+
+/* Add hover effect to match add button */
+#sort-select:hover {
+  /* transform: scale(1.1); */
+  border: 1px solid var(--accent-color);
+  transition: 600ms ease-in-out;
+}
+
+/* Style the select options */
+#sort-select option {
+  background: rgba(21, 21, 21, 0.9);
+  color: var(--text-color);
+  padding: 0px 8px;
+}
+
+/* .search-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  height: 40px;
+  margin-left: 5px;
+} */
+
+.search-icon {
+  position: absolute;
+  right: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  width: 35px;
+  height: 35px;
+}
+
+.search-icon svg {
+  fill: var(--secondary-color);
+  transition: fill 0.3s ease;
+}
+
+.search-icon:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.search-icon:hover svg {
+  fill: var(--accent-color);
+}
+
+/* Update search input styles */
+.search-input {
+  /* position: absolute; */
+  right: 0;
+  /* top: 0; */
+  width: 0;
+  height: 100%;
+  padding: 0;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 25px;
+  color: var(--text-color);
+  font: inherit;
+  font-size: 1rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  z-index: 2;
+  transform-origin: right;
+}
+
+.search-input:focus {
+  outline: none;
+}
+
+.search-input.active {
+  width: 100%;
+  opacity: 1;
+  visibility: visible;
+  padding: 8px 45px 8px 15px;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+/* Update filter wrapper styles */
+/* .filter-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+  margin-bottom: 15px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  width: 115px;
+} */
+
+/* .search-input { */
+/* position: absolute; */
+/* right: 100%; Position to the left of the icon */
+/* width: 40px; */
+/* height: 100%; */
+/* padding: 8px 8px 8px 15px; Adjust left padding */
+/* background: var(--primary-color); Solid background */
+/* border: 1px solid rgba(255, 255, 255, 0.5); */
+/* border-radius: 25px; */
+/* color: var(--text-color); */
+/* font: inherit; */
+/* caret-color: var(--accent-color); */
+/* opacity: 0; */
+/* visibility: hidden; */
+/* transition: all 0.3s ease; */
+/* z-index: 3; */
+/* } */
+
+/* Update search icon styles */
+
+/* Active states */
+/* .form-container.active .search-input,
+.search-input.active {
+  width: 100%;
+  opacity: 1;
+  visibility: visible;
+  padding: 8px 45px 8px 15px;
+} */
+
+.invisible {
+  width: 80px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition: all 0.3s ease !important;
+  pointer-events: none !important;
+}
+
 @media only screen and (max-width: 768px) {
-  #todo-form {
+  /* #todo-form {
     align-items: center;
     position: relative; /* Ensure this is not being overridden */
-    display: inline-block;
-    margin-bottom: 15px;
-  }
+  /* display: inline-block; */
+  /* margin-bottom: 15px; */
+  /* } */
 
   #todo-input {
     width: 100%;
     font-size: 14px;
     padding-right: 45px; /* Ensure there is enough space for the button */
-    height: 42px;
+    height: 40px;
   }
 
   #add-button {
@@ -222,14 +412,21 @@ h1 {
     width: 18px;
     height: 18px;
   }
+  /* .search-input.active {
+    width: calc(100% - 120px);
+  } */
+  .form-container {
+    padding: 0;
+    gap: 5px;
+  }
 }
 
 @media only screen and (max-width: 480px) {
-  #todo-form {
+  /* #todo-form {
     margin-bottom: 12px;
     position: relative;
     display: inline-block;
-  }
+  } */
 
   #todo-input {
     height: 40px;
@@ -249,6 +446,12 @@ h1 {
   #add-button svg {
     width: 16px;
     height: 16px;
+  }
+  /* .search-input.active {
+    width: calc(100% - 100px);
+  } */
+  .form-container {
+    gap: 5px;
   }
 }
 
@@ -504,25 +707,6 @@ footer {
   color: var(--text-color);
 }
 
-/* Update existing sort select styles */
-#sort-select {
-  /* width: auto; */
-  min-width: fit-content;
-  height: 42px; /* Match search input height (including borders) */
-  padding: 0 10px; /* Match search input padding */
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 25px;
-  color: var(--text-color);
-  font: inherit;
-  font-size: 0.9rem;
-  cursor: pointer;
-  /* backdrop-filter: blur(2.3px);
-  -webkit-backdrop-filter: blur(2.3px); */
-  transition: transform 0.2s ease;
-  outline: none;
-}
-
 @media only screen and (max-width: 768px) {
   body {
     font-size: 14pt;
@@ -557,11 +741,11 @@ footer {
     font-size: 0.9rem;
   }
 
-  #todo-form {
-    position: relative;
-    display: inline-block;
-    flex-direction: row !important; /* Ensure row direction */
-  }
+  /* #todo-form { */
+  /* position: relative; */
+  /* display: inline-block; */
+  /* flex-direction: row !important; Ensure row direction */
+  /* } */
 
   #add-button {
     position: absolute;
@@ -571,21 +755,8 @@ footer {
   }
 
   #sort-select {
-    /* width: auto; */
-    min-width: fit-content;
-    height: 40px; /* Match search input height (including borders) */
-    padding: 0 10px; /* Match search input padding */
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    border-radius: 25px;
-    color: var(--text-color);
-    font: inherit;
-    font-size: 0.9rem;
-    cursor: pointer;
-    /* backdrop-filter: blur(2.3px);
-  -webkit-backdrop-filter: blur(2.3px); */
-    transition: transform 0.2s ease;
-    outline: none;
+    padding: 0 8px;
+    font-size: 0.85rem;
   }
 }
 
@@ -616,23 +787,8 @@ footer {
     font-size: 0.8rem;
   }
   #sort-select {
-    /* width: auto; */
-    min-width: fit-content;
-    height: 40px; /* Match search input height (including borders) */
-    padding: 0; /* Match search input padding */
-    padding-left: 10px;
-    padding-inline: 10px;
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    border-radius: 25px;
-    color: var(--text-color);
-    font: inherit;
-    font-size: 0.9rem;
-    cursor: pointer;
-    /* backdrop-filter: blur(2.3px);
-  -webkit-backdrop-filter: blur(2.3px); */
-    transition: transform 0.2s ease;
-    outline: none;
+    padding: 0 6px;
+    font-size: 0.8rem;
   }
 }
 
@@ -649,37 +805,21 @@ footer {
 }
 
 /* Update existing search input styles */
-#search-input {
-  flex: 1;
-  min-width: 45%;
-  box-sizing: border-box;
-  padding: 5px;
-  background: rgb(15, 15, 15);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 1000px;
-  font: inherit;
-  color: var(--text-color);
-  caret-color: var(--accent-color);
-  z-index: 3;
-}
+/* .search-input { */
+/* flex: 1; */
+/* min-width: 45%; */
+/* box-sizing: border-box; */
+/* padding: 5px; */
+/* background: rgb(15, 15, 15); */
+/* border: 1px solid rgba(255, 255, 255, 0.5); */
+/* border-radius: 1000px; */
+/* font: inherit; */
+/* color: var(--text-color); */
+/* caret-color: var(--accent-color); */
+/* z-index: 3; */
+/* } */
 
-#search-input:focus {
-  outline: none;
-}
-
-/* Add hover effect to match add button */
-#sort-select:hover {
-  /* transform: scale(1.1); */
-  border: 1px solid var(--accent-color);
-  transition: 600ms ease-in-out;
-}
-
-/* Style the select options */
-#sort-select option {
-  background: rgba(21, 21, 21, 0.9);
-  color: var(--text-color);
-  padding: 0px 8px;
-}
+/* Add these new styles for the search functionality */
 
 .completed-separator {
   width: 100%;
@@ -1070,6 +1210,7 @@ footer {
 
 #list-select {
   flex: 1;
+  height: 40px;
   padding: 10px 15px;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.3);
@@ -1347,77 +1488,34 @@ footer {
   }
 }
 
-/* Add these new styles for the search functionality */
-.search-wrapper {
-  position: relative;
-  min-width: 40px;
-  height: 42px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end; /* Align icon to the right */
-}
-
-.search-icon {
-  position: relative; /* Change from absolute to relative */
-  background: none;
-  border: none;
-  padding: 8px;
-  cursor: pointer;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: background-color 0.3s ease;
-}
-
-.search-icon svg {
-  fill: var(--secondary-color);
-  transition: fill 0.3s ease;
-}
-
-.search-icon:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.search-icon:hover svg {
-  fill: var(--accent-color);
-}
-
-.search-input {
-  position: absolute;
-  right: 100%; /* Position to the left of the icon */
-  width: 40px;
-  height: 100%;
-  padding: 8px 8px 8px 15px; /* Adjust left padding */
-  background: var(--primary-color); /* Solid background */
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 25px;
-  color: var(--text-color);
-  font: inherit;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
-  z-index: 3;
-}
-
-.search-wrapper.active .search-input {
-  width: calc(100vw - 115px); /* Adjust width to cover form container */
-  opacity: 1;
-  visibility: visible;
-  right: 100%; /* Stay positioned to the left of the icon */
-}
-
 /* Responsive adjustments */
 @media only screen and (max-width: 768px) {
   .search-wrapper.active .search-input {
     width: calc(100vw - 120px);
+  }
+  .invisible {
+    width: 40px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition: all 0.3s ease !important;
+    pointer-events: none !important;
   }
 }
 
 @media only screen and (max-width: 480px) {
   .search-wrapper.active .search-input {
     width: calc(100vw - 95px);
+  }
+  .invisible {
+    width: 0px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition: all 0.3s ease !important;
+    pointer-events: none !important;
   }
 }
 
@@ -1446,34 +1544,11 @@ footer {
   word-break: break-word;
 }
 
-.form-wrapp {
-  display: flex;
-  flex-direction: row;
-  gap: 5px;
-  margin-bottom: 0px;
-  width: 100%;
-  align-items: center;
-  justify-content: center;
-}
-.form-container {
-  display: flex;
-  flex-direction: row;
-  flex-grow: 1;
-  margin-bottom: 0;
-  width: 100%;
-  align-items: center;
-  justify-content: center;
+/* Add invisible state styles */
+
+/* Update form container transition */
+.form-container > * {
+  transition: all 0.3s ease;
 }
 
-/* Update filter wrapper styles */
-.filter-wrapper {
-  display: flex;
-  flex-direction: row;
-  gap: 5px;
-  margin-bottom: 15px;
-  width: 30%;
-  align-items: center;
-  justify-content: flex-end;
-  flex-shrink: 0;
-  width: 110px;
-}
+/* Ensure search input takes full width when active */

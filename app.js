@@ -29,10 +29,7 @@ sortSelect.innerHTML = `
   <option value="alphabetical">A-Z</option>
 `;
 
-// Create search wrapper second
-const searchWrapper = document.createElement("div");
-searchWrapper.className = "search-wrapper";
-
+// Create search elements
 const searchIcon = document.createElement("button");
 searchIcon.className = "search-icon";
 searchIcon.innerHTML = `
@@ -47,16 +44,11 @@ searchInput.id = "search-input";
 searchInput.className = "search-input";
 searchInput.placeholder = "Search todos...";
 
-searchWrapper.appendChild(searchIcon);
-searchWrapper.appendChild(searchInput);
-
-// Add elements to wrapper in new order
-filterWrapper.appendChild(sortSelect);
-filterWrapper.appendChild(searchWrapper);
-
-// Insert wrapper after the form-container
+// Insert elements into form container
 const formContainer = document.querySelector(".form-container");
-formContainer.after(filterWrapper);
+formContainer.appendChild(sortSelect);
+formContainer.appendChild(searchIcon);
+formContainer.appendChild(searchInput);
 
 // List Management Functions
 function loadTodoLists() {
@@ -1146,17 +1138,36 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-// Add click handler for search icon
-searchIcon.addEventListener("click", () => {
-  searchWrapper.classList.toggle("active");
-  if (searchWrapper.classList.contains("active")) {
+// Update click handler for search icon
+searchIcon.addEventListener("click", (e) => {
+  e.stopPropagation();
+  formContainer.classList.toggle("active");
+  searchInput.classList.toggle("active");
+  todoForm.classList.toggle("invisible");
+  sortSelect.classList.toggle("invisible");
+
+  if (searchInput.classList.contains("active")) {
     searchInput.focus();
   }
 });
 
-// Add blur handler to hide search when clicking outside
+// Update blur handler to hide search when clicking outside
 document.addEventListener("click", (e) => {
-  if (!searchWrapper.contains(e.target)) {
-    searchWrapper.classList.remove("active");
+  const isClickOutside =
+    !searchIcon.contains(e.target) && !searchInput.contains(e.target);
+
+  if (isClickOutside) {
+    formContainer.classList.remove("active");
+    searchInput.classList.remove("active");
+    todoForm.classList.remove("invisible");
+    sortSelect.classList.remove("invisible");
   }
+});
+
+// Update input focus handler
+searchInput.addEventListener("focus", () => {
+  formContainer.classList.add("active");
+  searchInput.classList.add("active");
+  todoForm.classList.add("invisible");
+  sortSelect.classList.add("invisible");
 });
