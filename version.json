@@ -1,7 +1,7 @@
 {
-  "version": "1.0.190",
+  "version": "1.0.191",
   "releaseNotes": "Added push notifications and update functionality",
   "minVersion": "1.0.0",
   "updateRequired": false,
-  "cacheVersion": "todo-app-v1.0.190"
+  "cacheVersion": "todo-app-v1.0.191"
 }
