@@ -1011,28 +1011,34 @@ updateListSelect();
 updateTodoList();
 
 // Add this function to fetch and update the version
+let currentVersion = null;
+
 function updateVersionDisplay() {
-  fetch("./version.json?nocache=" + new Date().getTime())
+  fetch("./version.json?nocache=" + new Date().getTime(), {
+    cache: "no-store",
+    headers: {
+      "Cache-Control": "no-cache",
+    },
+  })
     .then((response) => response.json())
     .then((data) => {
+      if (currentVersion && currentVersion !== data.version) {
+        handleAppUpdate(data.version);
+      }
+      currentVersion = data.version;
       versionDisplay.textContent = "v" + data.version;
     })
     .catch((error) => console.error("Error fetching version:", error));
 }
 
-// Call it when the app starts
-updateVersionDisplay();
-
-// Update version display when checking for updates
-navigator.serviceWorker.addEventListener("message", (event) => {
-  if (event.data.type === "UPDATE_AVAILABLE") {
-    updateVersionDisplay(); // Update version display when new version is available
-    updateAvailable = true;
-    showUpdatePrompt(event.data.version);
-  }
-});
-
+// Update the app update handler
 function handleAppUpdate(version) {
+  // Remove any existing update prompts
+  const existingPrompt = document.querySelector(".update-prompt");
+  if (existingPrompt) {
+    existingPrompt.remove();
+  }
+
   const updatePrompt = document.createElement("div");
   updatePrompt.className = "update-prompt show";
   updatePrompt.innerHTML = `
@@ -1054,14 +1060,8 @@ function handleAppUpdate(version) {
         badge: "./icons/icon-72x72.webp",
         requireInteraction: true,
         actions: [
-          {
-            action: "update",
-            title: "Update Now",
-          },
-          {
-            action: "dismiss",
-            title: "Later",
-          },
+          { action: "update", title: "Update Now" },
+          { action: "dismiss", title: "Later" },
         ],
       });
     });
@@ -1071,13 +1071,22 @@ function handleAppUpdate(version) {
     .querySelector(".update-button")
     .addEventListener("click", async () => {
       try {
-        const registration = await navigator.serviceWorker.ready;
-        registration.active.postMessage("FORCE_UPDATE");
-
         updatePrompt.querySelector(".update-prompt-text").textContent =
           "Updating...";
         updatePrompt.querySelector(".update-prompt-buttons").style.display =
           "none";
+
+        // Clear all caches
+        await caches.keys().then((cacheNames) => {
+          return Promise.all(
+            cacheNames.map((cacheName) => caches.delete(cacheName))
+          );
+        });
+
+        // Force service worker update
+        if (navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage("FORCE_UPDATE");
+        }
       } catch (error) {
         console.error("Update failed:", error);
         alert("Update failed. Please try again.");
@@ -1097,19 +1106,19 @@ navigator.serviceWorker.addEventListener("message", (event) => {
     updateVersionDisplay();
     handleAppUpdate(event.data.version);
   } else if (event.data.type === "UPDATE_COMPLETED") {
-    // Reload the page to use the new version
     window.location.reload();
   } else if (event.data.type === "UPDATE_FAILED") {
     alert("Update failed: " + event.data.error);
   }
 });
 
-// Add periodic version check
+// Check for updates periodically
 setInterval(() => {
-  if (navigator.serviceWorker.controller) {
-    navigator.serviceWorker.controller.postMessage("CHECK_VERSION");
-  }
+  updateVersionDisplay();
 }, 3600000); // Check every hour
+
+// Initial version check
+updateVersionDisplay();
 
 // Add help window functionality
 helpButton.addEventListener("click", () => {
