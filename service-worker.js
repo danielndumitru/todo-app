@@ -1,5 +1,5 @@
 const CACHE_NAME = "todo-app-cache-v1";
-const VERSION_CHECK_INTERVAL = 60 * 60 * 1000; // 1 hour
+const VERSION_CHECK_INTERVAL = 5 * 60 * 1000; // 1 hour
 
 // Files to cache
 const urlsToCache = [

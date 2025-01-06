@@ -1246,3 +1246,4 @@ function showUpdatePrompt(version) {
 
 // Initial version check
 updateVersionDisplay();
+console.log(updateVersionDisplay());
