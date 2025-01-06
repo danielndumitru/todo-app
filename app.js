@@ -1087,7 +1087,6 @@ function handleAppUpdate(version) {
         // Wait for the new service worker to take control
         navigator.serviceWorker.ready.then(() => {
           // Update the version after the update is confirmed
-          self.currentVersion = version; // Update the version here
           versionDisplay.textContent = "v" + version; // Update the displayed version
           updatePrompt.remove(); // Remove the update prompt
         });
@@ -1254,4 +1253,3 @@ function showUpdatePrompt(version) {
 
 // Initial version check
 updateVersionDisplay();
-console.log(updateVersionDisplay());
