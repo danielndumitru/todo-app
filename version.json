@@ -1,5 +1,5 @@
 {
-  "version": "1.0.197",
+  "version": "1.0.198",
   "releaseNotes": "Added push notifications and update functionality",
   "minVersion": "1.0.0",
   "updateRequired": false,
