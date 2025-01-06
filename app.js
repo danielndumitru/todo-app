@@ -777,22 +777,18 @@ function showUpdatePrompt(newVersion) {
 
   document.body.appendChild(updatePrompt);
 
-  // Handle update button click
-  updatePrompt.querySelector(".update-button").addEventListener("click", () => {
-    // Clear cache and reload
-    caches
-      .keys()
-      .then((cacheNames) => {
+  updatePrompt
+    .querySelector(".update-button")
+    .addEventListener("click", async () => {
+      // Clear all caches and reload
+      await caches.keys().then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => caches.delete(cacheName))
         );
-      })
-      .then(() => {
-        window.location.reload(true);
       });
-  });
+      window.location.reload();
+    });
 
-  // Handle later button click
   updatePrompt
     .querySelector(".update-later-button")
     .addEventListener("click", () => {
@@ -1115,7 +1111,7 @@ navigator.serviceWorker.addEventListener("message", (event) => {
 // Check for updates periodically
 setInterval(() => {
   updateVersionDisplay();
-}, 3600000); // Check every hour
+}, 300000); //300000 for 5 min, 3600000 Check every hour
 
 // Initial version check
 updateVersionDisplay();
@@ -1207,3 +1203,46 @@ listButtons.forEach((button) => {
     hamburgerButton.classList.remove("active");
   });
 });
+
+// Listen for messages from the service worker
+navigator.serviceWorker.addEventListener("message", (event) => {
+  if (event.data.type === "UPDATE_AVAILABLE") {
+    showUpdatePrompt(event.data.version);
+  }
+});
+
+// Function to show update prompt
+function showUpdatePrompt(version) {
+  const updatePrompt = document.createElement("div");
+  updatePrompt.className = "update-prompt show";
+  updatePrompt.innerHTML = `
+    <p class="update-prompt-text">A new version (${version}) is available!</p>
+    <div class="update-prompt-buttons">
+      <button class="update-button">Update Now</button>
+      <button class="update-later-button">Later</button>
+    </div>
+  `;
+
+  document.body.appendChild(updatePrompt);
+
+  updatePrompt
+    .querySelector(".update-button")
+    .addEventListener("click", async () => {
+      // Clear all caches and reload
+      await caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => caches.delete(cacheName))
+        );
+      });
+      window.location.reload();
+    });
+
+  updatePrompt
+    .querySelector(".update-later-button")
+    .addEventListener("click", () => {
+      updatePrompt.remove();
+    });
+}
+
+// Initial version check
+updateVersionDisplay();
