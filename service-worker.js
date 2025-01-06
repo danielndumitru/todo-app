@@ -3,13 +3,13 @@ const VERSION_CHECK_INTERVAL = 5 * 60 * 1000; // 1 hour
 
 // Files to cache
 const urlsToCache = [
-  "/",
-  "/index.html",
-  "/style.css",
-  "/app.js",
-  "/manifest.json",
-  "/icons/icon-192x192.webp",
-  "/icons/icon-512x512.webp",
+  "/todo-app/",
+  "/todo-app/index.html",
+  "/todo-app/style.css",
+  "/todo-app/app.js",
+  "/todo-app/manifest.json",
+  "/todo-app/icons/icon-192x192.webp",
+  "/todo-app/icons/icon-512x512.webp",
   // Add other assets that need caching
 ];
 
@@ -73,6 +73,18 @@ self.addEventListener("message", (event) => {
   if (event.data === "CHECK_VERSION") {
     checkForUpdates();
   }
+});
+
+// If you continue to experience issues, consider adding some logging to your service worker to help debug:
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log("Opened cache");
+      return cache.addAll(urlsToCache).catch((error) => {
+        console.error("Failed to cache:", error);
+      });
+    })
+  );
 });
 
 // Periodic version check
