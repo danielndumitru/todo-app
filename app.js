@@ -1083,6 +1083,10 @@ function handleAppUpdate(version) {
         if (navigator.serviceWorker.controller) {
           navigator.serviceWorker.controller.postMessage("FORCE_UPDATE");
         }
+
+        // Update the version after the update is confirmed
+        self.currentVersion = version; // Update the version here
+        versionDisplay.textContent = "v" + version; // Update the displayed version
       } catch (error) {
         console.error("Update failed:", error);
         alert("Update failed. Please try again.");

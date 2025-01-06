@@ -63,7 +63,8 @@ function checkForUpdates() {
           });
         });
       }
-      self.currentVersion = data.version;
+      // Do not update the version here; wait for user confirmation
+      // self.currentVersion = data.version; // Remove this line
     })
     .catch((error) => console.error("Version check failed:", error));
 }
