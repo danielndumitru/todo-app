@@ -1008,6 +1008,7 @@ updateTodoList();
 
 // Add this function to fetch and update the version
 let currentVersion = null;
+let newVersion = null; // Temporary variable to hold the new version
 
 function updateVersionDisplay() {
   fetch("./version.json?nocache=" + new Date().getTime(), {
@@ -1019,10 +1020,11 @@ function updateVersionDisplay() {
     .then((response) => response.json())
     .then((data) => {
       if (currentVersion && currentVersion !== data.version) {
-        handleAppUpdate(data.version);
+        newVersion = data.version; // Store the new version temporarily
+        handleAppUpdate(newVersion); // Notify the user about the update
       }
-      currentVersion = data.version;
-      versionDisplay.textContent = "v" + data.version;
+      // Do not update the displayed version here
+      currentVersion = data.version; // Update the current version variable
     })
     .catch((error) => console.error("Error fetching version:", error));
 }
@@ -1046,22 +1048,6 @@ function handleAppUpdate(version) {
   `;
 
   document.body.appendChild(updatePrompt);
-
-  // Show notification if permission granted
-  if (Notification.permission === "granted") {
-    navigator.serviceWorker.ready.then((registration) => {
-      registration.showNotification("Todo App Update", {
-        body: `Version ${version} is available. Click to update.`,
-        icon: "./icons/icon-192x192.webp",
-        badge: "./icons/icon-72x72.webp",
-        requireInteraction: true,
-        actions: [
-          { action: "update", title: "Update Now" },
-          { action: "dismiss", title: "Later" },
-        ],
-      });
-    });
-  }
 
   updatePrompt
     .querySelector(".update-button")
@@ -1087,7 +1073,8 @@ function handleAppUpdate(version) {
         // Wait for the new service worker to take control
         navigator.serviceWorker.ready.then(() => {
           // Update the version after the update is confirmed
-          versionDisplay.textContent = "v" + version; // Update the displayed version
+          versionDisplay.textContent = "v" + newVersion; // Update the displayed version
+          currentVersion = newVersion; // Update the current version variable
           updatePrompt.remove(); // Remove the update prompt
         });
       } catch (error) {
