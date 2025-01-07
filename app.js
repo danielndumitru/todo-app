@@ -170,6 +170,105 @@ window.addEventListener("appinstalled", (event) => {
   deferredPrompt = null;
 });
 
+// On page load, check localStorage for the version
+window.addEventListener("load", () => {
+  const storedVersion = localStorage.getItem("appVersion");
+  if (storedVersion) {
+    const versionElement = document.getElementById("version");
+    versionElement.innerText = "v" + storedVersion; // Display the stored version
+  }
+  updateVersionDisplay(); // Fetch the latest version
+});
+
+// Listen for messages from the service worker
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.addEventListener("message", (event) => {
+    if (event.data.type === "NEW_VERSION") {
+      // Update the version number in the UI only when the new version is activated
+      const versionElement = document.getElementById("version");
+      versionElement.innerText = event.data.version; // Update the displayed version
+      localStorage.setItem("appVersion", event.data.version); // Store the new version in localStorage
+    }
+  });
+}
+
+// Ensure the version display is updated on page load
+document.addEventListener("DOMContentLoaded", () => {
+  const versionElement = document.getElementById("version");
+  if (versionElement) {
+    versionElement.innerText = localStorage.getItem("appVersion") || "v1.0"; // Set initial version if needed
+  }
+});
+
+// Add help window functionality
+helpButton.addEventListener("click", () => {
+  helpWindow.classList.add("show");
+});
+
+closeHelp.addEventListener("click", () => {
+  helpWindow.classList.remove("show");
+});
+
+// Close help window when clicking outside
+document.addEventListener("click", (e) => {
+  if (
+    helpWindow.classList.contains("show") &&
+    !helpWindow.contains(e.target) &&
+    e.target !== helpButton
+  ) {
+    helpWindow.classList.remove("show");
+  }
+});
+
+// Close help window on escape key
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && helpWindow.classList.contains("show")) {
+    helpWindow.classList.remove("show");
+  }
+});
+
+// Update click handler for search icon
+searchIcon.addEventListener("click", (e) => {
+  e.stopPropagation();
+  formContainer.classList.toggle("active");
+  searchInput.classList.toggle("active");
+  todoForm.classList.toggle("invisible");
+  sortSelect.classList.toggle("invisible");
+
+  if (searchInput.classList.contains("active")) {
+    searchInput.focus();
+  }
+});
+
+// Update blur handler to hide search when clicking outside
+document.addEventListener("click", (e) => {
+  const isClickOutside =
+    !searchIcon.contains(e.target) && !searchInput.contains(e.target);
+
+  if (isClickOutside) {
+    formContainer.classList.remove("active");
+    searchInput.classList.remove("active");
+    todoForm.classList.remove("invisible");
+    sortSelect.classList.remove("invisible");
+  }
+});
+
+// Update input focus handler
+searchInput.addEventListener("focus", () => {
+  formContainer.classList.add("active");
+  searchInput.classList.add("active");
+  todoForm.classList.add("invisible");
+  sortSelect.classList.add("invisible");
+});
+
+// Add hamburger menu functionality
+const hamburgerButton = document.querySelector(".hamburger-button");
+const hamburgerMenu = document.querySelector(".hamburger-menu");
+
+// Initialize
+updateListSelect();
+updateTodoList();
+
 // Todo Management Functions
 function addTodo() {
   try {
@@ -1012,7 +1111,7 @@ let newVersion = null; // Temporary variable to hold the new version
 
 function updateVersionDisplay() {
   fetch("./version.json?nocache=" + new Date().getTime(), {
-    cache: "no-store",
+    cache: "no-cache",
     headers: {
       "Cache-Control": "no-cache",
     },
@@ -1098,6 +1197,26 @@ window.addEventListener("load", () => {
   updateVersionDisplay(); // Fetch the latest version
 });
 
+// Listen for messages from the service worker
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.addEventListener("message", (event) => {
+    if (event.data.type === "NEW_VERSION") {
+      // Update the version number in the UI only when the new version is activated
+      const versionElement = document.getElementById("version");
+      versionElement.innerText = event.data.version; // Update the displayed version
+      localStorage.setItem("appVersion", event.data.version); // Store the new version in localStorage
+    }
+  });
+}
+
+// Ensure the version display is updated on page load
+document.addEventListener("DOMContentLoaded", () => {
+  const versionElement = document.getElementById("version");
+  if (versionElement) {
+    versionElement.innerText = localStorage.getItem("appVersion") || "v1.0"; // Set initial version if needed
+  }
+});
+
 // Add help window functionality
 helpButton.addEventListener("click", () => {
   helpWindow.classList.add("show");
@@ -1159,10 +1278,8 @@ searchInput.addEventListener("focus", () => {
   sortSelect.classList.add("invisible");
 });
 
+// Ensure this section is only declared once
 // Add hamburger menu functionality
-const hamburgerButton = document.querySelector(".hamburger-button");
-const hamburgerMenu = document.querySelector(".hamburger-menu");
-
 hamburgerButton.addEventListener("click", (e) => {
   e.stopPropagation();
   hamburgerMenu.classList.toggle("active");
