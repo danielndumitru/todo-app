@@ -17,24 +17,24 @@ const urlsToCache = [
 // Install event
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log("Opened cache");
-      return cache.addAll(urlsToCache);
-    })
+    fetch("./version.json")
+      .then((response) => response.json())
+      .then((data) => {
+        const newVersion = data.version;
+        self.version = newVersion; // Store the new version
+      })
   );
 });
 
 // Activate event
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
+    clients.claim().then(() => {
+      self.clients.matchAll({ includeUncontrolled: true }).then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({ type: "NEW_VERSION", version: self.version });
+        });
+      });
     })
   );
 });
@@ -53,7 +53,7 @@ function checkForUpdates() {
   fetch("./version.json", { cache: "no-store" })
     .then((response) => response.json())
     .then((data) => {
-      if (self.currentVersion && self.currentVersion !== data.version) {
+      if (currentVersion && currentVersion !== data.version) {
         // Notify all clients about the update
         self.clients.matchAll().then((clients) => {
           clients.forEach((client) => {
@@ -64,6 +64,7 @@ function checkForUpdates() {
           });
         });
       }
+      currentVersion = data.version; // Update the current version variable
     })
     .catch((error) => console.error("Version check failed:", error));
 }
