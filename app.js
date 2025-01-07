@@ -1007,31 +1007,14 @@ updateListSelect();
 updateTodoList();
 
 // Add this function to fetch and update the version
-let currentVersion = null; // Store the current version
+let currentVersion = localStorage.getItem("appVersion") || "1.0.0"; // Default version if not set
 let newVersion = null; // Temporary variable to hold the new version
 
-function updateVersionDisplay() {
-  fetch("./version.json?nocache=" + new Date().getTime(), {
-    cache: "no-store",
-    headers: {
-      "Cache-Control": "no-cache",
-    },
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      currentVersion = data.version; // Update the current version variable
-      // Do not update the displayed version here
-    })
-    .catch((error) => console.error("Error fetching version:", error));
+// Function to display the current version
+function displayVersion() {
+  const versionDisplay = document.querySelector(".version-display");
+  versionDisplay.textContent = "v" + currentVersion; // Display the version from localStorage
 }
-
-// Listen for messages from the service worker
-navigator.serviceWorker.addEventListener("message", (event) => {
-  if (event.data.type === "UPDATE_AVAILABLE") {
-    newVersion = event.data.version; // Store the new version temporarily
-    handleAppUpdate(newVersion); // Notify the user about the update
-  }
-});
 
 // Update the app update handler
 function handleAppUpdate(version) {
@@ -1071,8 +1054,9 @@ function handleAppUpdate(version) {
         // Wait for the new service worker to take control
         navigator.serviceWorker.ready.then(() => {
           // Update the version after the update is confirmed
-          versionDisplay.textContent = "v" + version; // Update the displayed version
-          localStorage.setItem("appVersion", version); // Store the new version in localStorage
+          currentVersion = version; // Update the current version variable
+          localStorage.setItem("appVersion", currentVersion); // Store the new version in localStorage
+          displayVersion(); // Update the displayed version
           updatePrompt.remove(); // Remove the update prompt
         });
       } catch (error) {
@@ -1088,14 +1072,15 @@ function handleAppUpdate(version) {
     });
 }
 
-// On page load, check localStorage for the version
-window.addEventListener("load", () => {
-  const storedVersion = localStorage.getItem("appVersion");
-  if (storedVersion) {
-    versionDisplay.textContent = "v" + storedVersion; // Display the stored version
+// Listen for messages from the service worker
+navigator.serviceWorker.addEventListener("message", (event) => {
+  if (event.data.type === "UPDATE_AVAILABLE") {
+    handleAppUpdate(event.data.version);
   }
-  updateVersionDisplay(); // Fetch the latest version
 });
+
+// Display the current version on load
+displayVersion();
 
 // Add help window functionality
 helpButton.addEventListener("click", () => {

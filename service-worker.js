@@ -53,7 +53,7 @@ function checkForUpdates() {
   fetch("./version.json", { cache: "no-store" })
     .then((response) => response.json())
     .then((data) => {
-      if (currentVersion && currentVersion !== data.version) {
+      if (self.currentVersion && self.currentVersion !== data.version) {
         // Notify all clients about the update
         self.clients.matchAll().then((clients) => {
           clients.forEach((client) => {
@@ -64,7 +64,6 @@ function checkForUpdates() {
           });
         });
       }
-      currentVersion = data.version; // Update the current version variable
     })
     .catch((error) => console.error("Version check failed:", error));
 }
