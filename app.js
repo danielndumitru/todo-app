@@ -1092,7 +1092,8 @@ function handleAppUpdate(version) {
 window.addEventListener("load", () => {
   const storedVersion = localStorage.getItem("appVersion");
   if (storedVersion) {
-    versionDisplay.textContent = "v" + storedVersion; // Display the stored version
+    const versionElement = document.getElementById("version");
+    versionElement.innerText = "v" + storedVersion; // Display the stored version
   }
   updateVersionDisplay(); // Fetch the latest version
 });
@@ -1234,6 +1235,7 @@ if ("serviceWorker" in navigator) {
       // Update the version number in the UI only when the new version is activated
       const versionElement = document.getElementById("version");
       versionElement.innerText = event.data.version; // Update the displayed version
+      localStorage.setItem("appVersion", event.data.version); // Store the new version in localStorage
     }
   });
 }
