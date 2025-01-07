@@ -1013,6 +1013,28 @@ function displayVersion() {
   versionDisplay.textContent = "v" + currentVersion; // Display the version from localStorage
 }
 
+function updateVersionDisplay() {
+  fetch("./version.json?nocache=" + new Date().getTime(), {
+    cache: "no-store",
+    headers: {
+      "Cache-Control": "no-cache",
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      // Check if the current version is different from the fetched version
+      if (currentVersion && currentVersion !== data.version) {
+        newVersion = data.version; // Store the new version temporarily
+        handleAppUpdate(newVersion); // Notify the user about the update
+      }
+      // Update the current version variable
+      currentVersion = data.version;
+      localStorage.setItem("appVersion", currentVersion); // Store the current version in localStorage
+      displayVersion(); // Update the displayed version
+    })
+    .catch((error) => console.error("Error fetching version:", error));
+}
+
 // Update the app update handler
 function handleAppUpdate(version) {
   const updatePrompt = document.createElement("div");
