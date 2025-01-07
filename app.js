@@ -175,7 +175,7 @@ window.addEventListener("load", () => {
   const storedVersion = localStorage.getItem("appVersion");
   if (storedVersion) {
     const versionElement = document.getElementById("version");
-    versionElement.innerText = "v" + storedVersion; // Display the stored version
+    versionElement.innerText = storedVersion; // Display the stored version
   }
   updateVersionDisplay(); // Fetch the latest version
 });
@@ -1118,8 +1118,10 @@ function updateVersionDisplay() {
   })
     .then((response) => response.json())
     .then((data) => {
-      currentVersion = data.version; // Update the current version variable
-      // Do not update the displayed version here
+      const currentVersion = data.cacheVersion; // Get the cacheVersion
+      const versionElement = document.getElementById("version");
+      versionElement.innerText = currentVersion; // Update the displayed version
+      localStorage.setItem("appVersion", currentVersion); // Store the new version in localStorage
     })
     .catch((error) => console.error("Error fetching version:", error));
 }
@@ -1192,7 +1194,7 @@ window.addEventListener("load", () => {
   const storedVersion = localStorage.getItem("appVersion");
   if (storedVersion) {
     const versionElement = document.getElementById("version");
-    versionElement.innerText = "v" + storedVersion; // Display the stored version
+    versionElement.innerText = storedVersion; // Display the stored version
   }
   updateVersionDisplay(); // Fetch the latest version
 });
