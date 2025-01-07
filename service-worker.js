@@ -1,5 +1,6 @@
 const CACHE_NAME = "todo-app-cache-v1";
-const VERSION_CHECK_INTERVAL = 5 * 60 * 1000; // 1 hour
+const VERSION_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
+let currentVersion = null; // Store the current version
 
 // Files to cache
 const urlsToCache = [
@@ -52,7 +53,7 @@ function checkForUpdates() {
   fetch("./version.json", { cache: "no-store" })
     .then((response) => response.json())
     .then((data) => {
-      if (self.currentVersion && self.currentVersion !== data.version) {
+      if (currentVersion && currentVersion !== data.version) {
         // Notify all clients about the update
         self.clients.matchAll().then((clients) => {
           clients.forEach((client) => {
@@ -63,8 +64,7 @@ function checkForUpdates() {
           });
         });
       }
-      // Do not update the version here; wait for user confirmation
-      // self.currentVersion = data.version; // Remove this line
+      currentVersion = data.version; // Update the current version variable
     })
     .catch((error) => console.error("Version check failed:", error));
 }

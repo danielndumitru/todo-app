@@ -1019,24 +1019,22 @@ function updateVersionDisplay() {
   })
     .then((response) => response.json())
     .then((data) => {
-      if (currentVersion && currentVersion !== data.version) {
-        newVersion = data.version; // Store the new version temporarily
-        handleAppUpdate(newVersion); // Notify the user about the update
-      }
-      // Do not update the displayed version here
       currentVersion = data.version; // Update the current version variable
+      // Do not update the displayed version here
     })
     .catch((error) => console.error("Error fetching version:", error));
 }
 
+// Listen for messages from the service worker
+navigator.serviceWorker.addEventListener("message", (event) => {
+  if (event.data.type === "UPDATE_AVAILABLE") {
+    newVersion = event.data.version; // Store the new version temporarily
+    handleAppUpdate(newVersion); // Notify the user about the update
+  }
+});
+
 // Update the app update handler
 function handleAppUpdate(version) {
-  // Remove any existing update prompts
-  const existingPrompt = document.querySelector(".update-prompt");
-  if (existingPrompt) {
-    existingPrompt.remove();
-  }
-
   const updatePrompt = document.createElement("div");
   updatePrompt.className = "update-prompt show";
   updatePrompt.innerHTML = `
@@ -1073,8 +1071,8 @@ function handleAppUpdate(version) {
         // Wait for the new service worker to take control
         navigator.serviceWorker.ready.then(() => {
           // Update the version after the update is confirmed
-          versionDisplay.textContent = "v" + newVersion; // Update the displayed version
-          currentVersion = newVersion; // Update the current version variable
+          versionDisplay.textContent = "v" + version; // Update the displayed version
+          localStorage.setItem("appVersion", version); // Store the new version in localStorage
           updatePrompt.remove(); // Remove the update prompt
         });
       } catch (error) {
@@ -1090,25 +1088,14 @@ function handleAppUpdate(version) {
     });
 }
 
-// Update the service worker message handler
-navigator.serviceWorker.addEventListener("message", (event) => {
-  if (event.data.type === "UPDATE_AVAILABLE") {
-    updateVersionDisplay();
-    handleAppUpdate(event.data.version);
-  } else if (event.data.type === "UPDATE_COMPLETED") {
-    window.location.reload();
-  } else if (event.data.type === "UPDATE_FAILED") {
-    alert("Update failed: " + event.data.error);
+// On page load, check localStorage for the version
+window.addEventListener("load", () => {
+  const storedVersion = localStorage.getItem("appVersion");
+  if (storedVersion) {
+    versionDisplay.textContent = "v" + storedVersion; // Display the stored version
   }
+  updateVersionDisplay(); // Fetch the latest version
 });
-
-// Check for updates periodically
-setInterval(() => {
-  updateVersionDisplay();
-}, 300000); //300000 for 5 min, 3600000 Check every hour
-
-// Initial version check
-updateVersionDisplay();
 
 // Add help window functionality
 helpButton.addEventListener("click", () => {
