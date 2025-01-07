@@ -1232,8 +1232,20 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.addEventListener("message", (event) => {
     if (event.data.type === "NEW_VERSION") {
       // Update the version number in the UI only when the new version is activated
-      const versionElement = document.getElementById("version"); // Ensure you have an element with this ID
-      versionElement.innerText = event.data.version; // Update the displayed version
+      const versionElement = document.getElementById("version");
+      if (versionElement) {
+        versionElement.innerText = event.data.version; // Update the displayed version
+      } else {
+        console.error("Version element not found");
+      }
     }
   });
 }
+
+// Ensure the version display is updated on page load
+document.addEventListener("DOMContentLoaded", () => {
+  const versionElement = document.getElementById("version");
+  if (versionElement) {
+    versionElement.innerText = localStorage.getItem("appVersion") || "v1.0"; // Set initial version if needed
+  }
+});
