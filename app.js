@@ -778,19 +778,41 @@ function showUpdatePrompt(newVersion) {
   updatePrompt
     .querySelector(".update-button")
     .addEventListener("click", async () => {
-      // Clear all caches and reload
-      await caches.keys().then((cacheNames) => {
-        return Promise.all(
-          cacheNames.map((cacheName) => caches.delete(cacheName))
-        );
-      });
-      window.location.reload();
+      try {
+        updatePrompt.querySelector(".update-prompt-text").textContent =
+          "Updating...";
+        updatePrompt.querySelector(".update-prompt-buttons").style.display =
+          "none";
+
+        // Clear all caches
+        await caches.keys().then((cacheNames) => {
+          return Promise.all(
+            cacheNames.map((cacheName) => caches.delete(cacheName))
+          );
+        });
+
+        // Force service worker update
+        if (navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage("FORCE_UPDATE");
+        }
+
+        // Wait for the new service worker to take control
+        navigator.serviceWorker.ready.then(() => {
+          // Update the version after the update is confirmed
+          localStorage.setItem("appVersion", newVersion); // Store the new version in localStorage
+          displayVersion(); // Update the displayed version
+          updatePrompt.remove(); // Remove the update prompt
+        });
+      } catch (error) {
+        console.error("Update failed:", error);
+        alert("Update failed. Please try again.");
+      }
     });
 
   updatePrompt
     .querySelector(".update-later-button")
     .addEventListener("click", () => {
-      updatePrompt.remove();
+      updatePrompt.remove(); // Just remove the prompt without updating the version
     });
 }
 
@@ -1073,8 +1095,7 @@ function handleAppUpdate(version) {
         // Wait for the new service worker to take control
         navigator.serviceWorker.ready.then(() => {
           // Update the version after the update is confirmed
-          currentVersion = version; // Update the current version variable
-          localStorage.setItem("appVersion", currentVersion); // Store the new version in localStorage
+          localStorage.setItem("appVersion", version); // Store the new version in localStorage
           displayVersion(); // Update the displayed version
           updatePrompt.remove(); // Remove the update prompt
         });
@@ -1087,7 +1108,7 @@ function handleAppUpdate(version) {
   updatePrompt
     .querySelector(".update-later-button")
     .addEventListener("click", () => {
-      updatePrompt.remove();
+      updatePrompt.remove(); // Just remove the prompt without updating the version
     });
 }
 
@@ -1187,4 +1208,10 @@ listButtons.forEach((button) => {
     hamburgerMenu.classList.remove("active");
     hamburgerButton.classList.remove("active");
   });
+});
+
+// Initialize the app version on load
+document.addEventListener("DOMContentLoaded", () => {
+  currentVersion = localStorage.getItem("appVersion") || "1.0.0"; // Default version if not set
+  displayVersion(); // Display the current version
 });
