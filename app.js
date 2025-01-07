@@ -78,14 +78,12 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .register("./service-worker.js")
-      .then((registration) => {
-        console.log(
-          "ServiceWorker registered successfully:",
-          registration.scope
-        );
+      .then(() => {
+        console.log("Service Worker registered successfully");
+        updateVersionDisplay(); // Call the function to update the version display
       })
       .catch((error) => {
-        console.error("ServiceWorker registration failed:", error);
+        console.error("Service Worker registration failed:", error);
       });
   });
 }
@@ -1212,3 +1210,25 @@ function showUpdatePrompt(version) {
 
 // Initial version check
 updateVersionDisplay();
+
+function updateVersionDisplay() {
+  fetch("./version.json?nocache=" + new Date().getTime(), {
+    cache: "no-store",
+    headers: {
+      "Cache-Control": "no-cache",
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      // Check if the current version is different from the fetched version
+      if (currentVersion && currentVersion !== data.version) {
+        newVersion = data.version; // Store the new version temporarily
+        handleAppUpdate(newVersion); // Notify the user about the update
+      }
+      // Update the current version variable
+      currentVersion = data.version;
+      localStorage.setItem("appVersion", currentVersion); // Store the current version in localStorage
+      displayVersion(); // Update the displayed version
+    })
+    .catch((error) => console.error("Error fetching version:", error));
+}
