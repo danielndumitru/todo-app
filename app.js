@@ -1007,7 +1007,7 @@ updateListSelect();
 updateTodoList();
 
 // Add this function to fetch and update the version
-let currentVersion = null;
+let currentVersion = null; // Store the current version
 let newVersion = null; // Temporary variable to hold the new version
 
 function updateVersionDisplay() {
