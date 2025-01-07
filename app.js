@@ -73,7 +73,7 @@ function getTodos() {
   return currentList?.todos || [];
 }
 
-// Service Worker Registration
+// Register the service worker
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
@@ -1006,7 +1006,6 @@ updateTodoList();
 
 // Add this function to fetch and update the version
 let currentVersion = localStorage.getItem("appVersion") || "1.0.0"; // Default version if not set
-let newVersion = null; // Temporary variable to hold the new version
 
 // Function to display the current version
 function displayVersion() {
@@ -1167,68 +1166,3 @@ listButtons.forEach((button) => {
     hamburgerButton.classList.remove("active");
   });
 });
-
-// Listen for messages from the service worker
-navigator.serviceWorker.addEventListener("message", (event) => {
-  if (event.data.type === "UPDATE_AVAILABLE") {
-    showUpdatePrompt(event.data.version);
-  }
-});
-
-// Function to show update prompt
-function showUpdatePrompt(version) {
-  const updatePrompt = document.createElement("div");
-  updatePrompt.className = "update-prompt show";
-  updatePrompt.innerHTML = `
-    <p class="update-prompt-text">A new version (${version}) is available!</p>
-    <div class="update-prompt-buttons">
-      <button class="update-button">Update Now</button>
-      <button class="update-later-button">Later</button>
-    </div>
-  `;
-
-  document.body.appendChild(updatePrompt);
-
-  updatePrompt
-    .querySelector(".update-button")
-    .addEventListener("click", async () => {
-      // Clear all caches and reload
-      await caches.keys().then((cacheNames) => {
-        return Promise.all(
-          cacheNames.map((cacheName) => caches.delete(cacheName))
-        );
-      });
-      window.location.reload();
-    });
-
-  updatePrompt
-    .querySelector(".update-later-button")
-    .addEventListener("click", () => {
-      updatePrompt.remove();
-    });
-}
-
-// Initial version check
-updateVersionDisplay();
-
-function updateVersionDisplay() {
-  fetch("./version.json?nocache=" + new Date().getTime(), {
-    cache: "no-store",
-    headers: {
-      "Cache-Control": "no-cache",
-    },
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      // Check if the current version is different from the fetched version
-      if (currentVersion && currentVersion !== data.version) {
-        newVersion = data.version; // Store the new version temporarily
-        handleAppUpdate(newVersion); // Notify the user about the update
-      }
-      // Update the current version variable
-      currentVersion = data.version;
-      localStorage.setItem("appVersion", currentVersion); // Store the current version in localStorage
-      displayVersion(); // Update the displayed version
-    })
-    .catch((error) => console.error("Error fetching version:", error));
-}
