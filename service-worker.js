@@ -20,7 +20,7 @@ self.addEventListener("install", (event) => {
     fetch("./version.json")
       .then((response) => response.json())
       .then((data) => {
-        const newVersion = data.version;
+        const newVersion = data.cacheVersion; // Update to use cacheVersion
         self.version = newVersion; // Store the new version
       })
   );
@@ -30,6 +30,7 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     clients.claim().then(() => {
+      // Notify all clients about the new version only after activation
       self.clients.matchAll({ includeUncontrolled: true }).then((clients) => {
         clients.forEach((client) => {
           client.postMessage({ type: "NEW_VERSION", version: self.version });
