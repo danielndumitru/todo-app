@@ -1,6 +1,6 @@
-const CACHE_NAME = "todo-app-cache-v1";
-const VERSION_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
-let currentVersion = null; // Store the current version
+// Global variables
+const CACHE_NAME_PREFIX = "todo-app-cache-";
+const VERSION_CHECK_INTERVAL = 5 * 60 * 1000; // 60 * 60 * 1000 = Check every hour (you can adjust this)
 
 // Files to cache
 const urlsToCache = [
@@ -21,23 +21,58 @@ self.addEventListener("install", (event) => {
     fetch("./version.json")
       .then((response) => response.json())
       .then((data) => {
-        const newVersion = data.cacheVersion; // Update to use cacheVersion
+        const newVersion = data.cacheVersion;
         self.version = newVersion; // Store the new version
+        const cacheName = `${CACHE_NAME_PREFIX}${self.version}`;
+
+        // Cache assets during the install event
+        caches.open(cacheName).then((cache) => {
+          console.log("Caching assets for version:", self.version);
+          return cache.addAll(urlsToCache).catch((error) => {
+            console.error("Failed to cache:", error);
+          });
+        });
       })
   );
 });
 
 // Activate event
 self.addEventListener("activate", (event) => {
+  const currentCacheName = `${CACHE_NAME_PREFIX}${self.version}`;
+
   event.waitUntil(
-    clients.claim().then(() => {
-      // Notify all clients about the new version only after activation
-      self.clients.matchAll({ includeUncontrolled: true }).then((clients) => {
-        clients.forEach((client) => {
-          client.postMessage({ type: "NEW_VERSION", version: self.version });
+    caches
+      .keys()
+      .then((cacheNames) => {
+        // Delete caches that don't match the current version
+        const cachesToDelete = cacheNames.filter((cacheName) => {
+          return (
+            cacheName.startsWith(CACHE_NAME_PREFIX) &&
+            cacheName !== currentCacheName
+          );
         });
-      });
-    })
+        return Promise.all(
+          cachesToDelete.map((cacheName) => {
+            console.log("Deleting old cache:", cacheName);
+            return caches.delete(cacheName);
+          })
+        );
+      })
+      .then(() => {
+        // Ensure clients are notified about the new version
+        self.clients.claim().then(() => {
+          self.clients
+            .matchAll({ includeUncontrolled: true })
+            .then((clients) => {
+              clients.forEach((client) => {
+                client.postMessage({
+                  type: "NEW_VERSION",
+                  version: self.version,
+                });
+              });
+            });
+        });
+      })
   );
 });
 
@@ -55,18 +90,18 @@ function checkForUpdates() {
   fetch("./version.json", { cache: "no-store" })
     .then((response) => response.json())
     .then((data) => {
-      if (currentVersion && currentVersion !== data.version) {
+      if (self.version && self.version !== data.cacheVersion) {
         // Notify all clients about the update
         self.clients.matchAll().then((clients) => {
           clients.forEach((client) => {
             client.postMessage({
               type: "UPDATE_AVAILABLE",
-              version: data.version,
+              version: data.cacheVersion,
             });
           });
         });
       }
-      currentVersion = data.version; // Update the current version variable
+      self.version = data.cacheVersion; // Update the current version variable
     })
     .catch((error) => console.error("Version check failed:", error));
 }
@@ -76,24 +111,6 @@ self.addEventListener("message", (event) => {
   if (event.data === "CHECK_VERSION") {
     checkForUpdates();
   }
-});
-
-// If you continue to experience issues, consider adding some logging to your service worker to help debug:
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log("Opened cache");
-      return cache.addAll(urlsToCache).catch((error) => {
-        console.error("Failed to cache:", error);
-        // Log each URL that failed to cache
-        urlsToCache.forEach((url) => {
-          fetch(url).catch((err) =>
-            console.error(`Failed to fetch ${url}:`, err)
-          );
-        });
-      });
-    })
-  );
 });
 
 // Periodic version check

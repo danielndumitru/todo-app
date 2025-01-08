@@ -170,7 +170,7 @@ window.addEventListener("appinstalled", (event) => {
   deferredPrompt = null;
 });
 
-// On page load, check localStorage for the version
+// 8. Update version display on page load
 window.addEventListener("load", () => {
   const storedVersion = localStorage.getItem("appVersion");
   if (storedVersion) {
@@ -180,7 +180,7 @@ window.addEventListener("load", () => {
   updateVersionDisplay(); // Fetch the latest version
 });
 
-// Listen for messages from the service worker
+// 9. Listen for messages from the service worker about updates
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.addEventListener("message", (event) => {
     if (event.data.type === "NEW_VERSION") {
@@ -188,17 +188,40 @@ if ("serviceWorker" in navigator) {
       const versionElement = document.getElementById("version");
       versionElement.innerText = event.data.version; // Update the displayed version
       localStorage.setItem("appVersion", event.data.version); // Store the new version in localStorage
+      // Notify user that a new version is available
+      notifyUpdateAvailable();
     }
   });
 }
 
-// Ensure the version display is updated on page load
+// 10. Display the latest version on page load
 document.addEventListener("DOMContentLoaded", () => {
   const versionElement = document.getElementById("version");
   if (versionElement) {
     versionElement.innerText = localStorage.getItem("appVersion") || "v1.0"; // Set initial version if needed
   }
 });
+
+// 11. Function to manually trigger a reload when an update is available
+function notifyUpdateAvailable() {
+  const updateAvailable = confirm(
+    "A new version of the app is available. Do you want to reload?"
+  );
+  if (updateAvailable) {
+    window.location.reload(); // Reload the page to fetch the latest version and cache
+  }
+}
+
+//=============================================================//
+// Periodically check for updates
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.ready.then((registration) => {
+    setInterval(() => {
+      registration.update(); // Check for updates
+    }, 5 * 60 * 1000); // 60 * 60 * 1000 = Every hour (or as needed)
+  });
+}
+//=============================================================//
 
 // Add help window functionality
 helpButton.addEventListener("click", (e) => {
