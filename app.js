@@ -214,12 +214,28 @@ function notifyUpdateAvailable() {
 
 //=============================================================//
 // Periodically check for updates
+// if ("serviceWorker" in navigator) {
+// navigator.serviceWorker.ready.then((registration) => {
+// setInterval(() => {
+// registration.update(); // Check for updates
+// }, 5 * 60 * 1000); // 60 * 60 * 1000 = Every hour (or as needed)
+// });
+// }
+
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.ready.then((registration) => {
-    setInterval(() => {
-      registration.update(); // Check for updates
-    }, 5 * 60 * 1000); // 60 * 60 * 1000 = Every hour (or as needed)
-  });
+  navigator.serviceWorker
+    .register("/service-worker.js") // Ensure the path to the service worker file is correct
+    .then((registration) => {
+      console.log("Service Worker registered with scope:", registration.scope);
+
+      // Once the service worker is registered, we can make periodic update checks
+      setInterval(() => {
+        registration.update();
+      }, 5 * 60 * 1000); // 60 * 60 * 1000 = Every hour (or as needed)
+    })
+    .catch((error) => {
+      console.error("Service Worker registration failed:", error);
+    });
 }
 //=============================================================//
 

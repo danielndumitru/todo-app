@@ -16,22 +16,48 @@ const urlsToCache = [
 ];
 
 // Install event
+// self.addEventListener("install", (event) => {
+//   event.waitUntil(
+//     fetch("./version.json")
+//       .then((response) => response.json())
+//       .then((data) => {
+//         const newVersion = data.cacheVersion;
+// self.version = newVersion; // Store the new version
+// const cacheName = `${CACHE_NAME_PREFIX}${self.version}`;
+
+// Cache assets during the install event
+//         caches.open(cacheName).then((cache) => {
+//           console.log("Caching assets for version:", self.version);
+//           return cache.addAll(urlsToCache).catch((error) => {
+//             console.error("Failed to cache:", error);
+//           });
+//         });
+//       })
+//   );
+// });
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     fetch("./version.json")
       .then((response) => response.json())
       .then((data) => {
         const newVersion = data.cacheVersion;
-        self.version = newVersion; // Store the new version
+        self.version = newVersion;
         const cacheName = `${CACHE_NAME_PREFIX}${self.version}`;
 
-        // Cache assets during the install event
         caches.open(cacheName).then((cache) => {
           console.log("Caching assets for version:", self.version);
           return cache.addAll(urlsToCache).catch((error) => {
             console.error("Failed to cache:", error);
           });
         });
+      })
+      .catch((error) => {
+        console.error(
+          "Failed to fetch version.json, using fallback version:",
+          error
+        );
+        // Fallback logic: Use the previously cached version
       })
   );
 });
@@ -77,12 +103,36 @@ self.addEventListener("activate", (event) => {
 });
 
 // Fetch event
+// self.addEventListener("fetch", (event) => {
+//   event.respondWith(
+//     caches.match(event.request).then((response) => {
+//       return response || fetch(event.request);
+//     })
+//   );
+// });
+
 self.addEventListener("fetch", (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
-  );
+  if (event.request.url.includes("api")) {
+    // Handle API requests differently, e.g., cache only the response with a max-age strategy
+    event.respondWith(
+      fetch(event.request).then((response) => {
+        // Cache the response if it's valid
+        if (response && response.status === 200) {
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, response.clone());
+          });
+        }
+        return response;
+      })
+    );
+  } else {
+    // Standard cache-first logic for static assets
+    event.respondWith(
+      caches.match(event.request).then((response) => {
+        return response || fetch(event.request);
+      })
+    );
+  }
 });
 
 // Check for updates
