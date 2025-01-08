@@ -224,7 +224,7 @@ function notifyUpdateAvailable() {
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker
-    .register("/service-worker.js") // Ensure the path to the service worker file is correct
+    .register("/todo-app/service-worker.js") // Ensure the path to the service worker file is correct
     .then((registration) => {
       console.log("Service Worker registered with scope:", registration.scope);
 
