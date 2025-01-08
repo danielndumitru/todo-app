@@ -12,7 +12,7 @@ const todoListUl = document.getElementById("todo-list");
 const deleteAll = document.getElementById("delete-all");
 const todoCount = document.getElementById("todo-count");
 const versionDisplay = document.querySelector(".version-display");
-const helpButton = document.querySelector(".help-button");
+const helpButton = document.querySelector("#help-list-button");
 const helpWindow = document.querySelector(".help-window");
 const closeHelp = document.querySelector(".close-help");
 
@@ -201,10 +201,12 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Add help window functionality
-helpButton.addEventListener("click", () => {
+helpButton.addEventListener("click", (e) => {
+  e.stopPropagation(); // Prevent any parent click handlers from being triggered
   helpWindow.classList.add("show");
 });
 
+// Ensure the close button works
 closeHelp.addEventListener("click", () => {
   helpWindow.classList.remove("show");
 });
@@ -225,6 +227,9 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && helpWindow.classList.contains("show")) {
     helpWindow.classList.remove("show");
   }
+});
+closeHelp.addEventListener("click", () => {
+  helpWindow.classList.remove("show");
 });
 
 // Update click handler for search icon

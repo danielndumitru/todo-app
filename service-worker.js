@@ -11,6 +11,7 @@ const urlsToCache = [
   "/todo-app/manifest.json",
   "/todo-app/icons/icon-192x192.webp",
   "/todo-app/icons/icon-512x512.webp",
+  "/todo-app/icons",
   // Add other assets that need caching
 ];
 
@@ -84,6 +85,12 @@ self.addEventListener("install", (event) => {
       console.log("Opened cache");
       return cache.addAll(urlsToCache).catch((error) => {
         console.error("Failed to cache:", error);
+        // Log each URL that failed to cache
+        urlsToCache.forEach((url) => {
+          fetch(url).catch((err) =>
+            console.error(`Failed to fetch ${url}:`, err)
+          );
+        });
       });
     })
   );
