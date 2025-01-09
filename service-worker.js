@@ -18,12 +18,13 @@ const urlsToCache = [
 // Combined install event handler with logs
 self.addEventListener("install", (event) => {
   event.waitUntil(
+    // Fetch version.json to get the version for this install
     fetch("./version.json")
       .then((response) => response.json())
       .then((data) => {
-        const newVersion = data.cacheVersion;
-        self.version = newVersion;
-        const currentCacheName = `${CACHE_NAME}-${self.version}`;
+        const newVersion = data.cacheVersion; // Get version from version.json
+        self.version = newVersion; // Store the version
+        const currentCacheName = `${CACHE_NAME}-${self.version}`; // Cache name based on version
 
         // Open the cache and add assets
         return caches.open(currentCacheName).then((cache) => {
@@ -96,26 +97,24 @@ self.addEventListener("message", (event) => {
 });
 
 // If you continue to experience issues, consider adding some logging to your service worker to help debug:
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log("Opened cache");
-      return cache.addAll(urlsToCache).catch((error) => {
-        console.error("Failed to cache:", error);
-      });
-    })
-  );
-});
+// self.addEventListener("install", (event) => {
+//   event.waitUntil(
+//     caches.open(CACHE_NAME).then((cache) => {
+//       console.log("Opened cache");
+//       return cache.addAll(urlsToCache).catch((error) => {
+//         console.error("Failed to cache:", error);
+//       });
+//     })
+//   );
+// });
 
 // Periodic version check
-setInterval(checkForUpdates, VERSION_CHECK_INTERVAL);
-
 function checkForUpdates() {
   fetch("./version.json", { cache: "no-store" })
     .then((response) => response.json())
     .then((data) => {
-      if (currentVersion && currentVersion !== data.cacheVersion) {
-        // Notify all clients about the update
+      if (!currentVersion || currentVersion !== data.cacheVersion) {
+        // Notify all clients about the update if version has changed
         self.clients.matchAll().then((clients) => {
           clients.forEach((client) => {
             client.postMessage({
@@ -129,3 +128,6 @@ function checkForUpdates() {
     })
     .catch((error) => console.error("Version check failed:", error));
 }
+
+// Periodic version check (outside of any event listener)
+setInterval(checkForUpdates, VERSION_CHECK_INTERVAL);
