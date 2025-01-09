@@ -181,14 +181,15 @@ window.addEventListener("load", () => {
 });
 
 // 9. Listen for messages from the service worker about updates
-
-// Listen for 'NEW_VERSION' message from the service worker
 navigator.serviceWorker.addEventListener("message", (event) => {
   if (event.data.type === "NEW_VERSION") {
     const newVersion = event.data.version;
     alert(
       `A new version (${newVersion}) is available. Please refresh the page.`
     );
+  }
+  if (event.data.type === "CACHE_UPDATED") {
+    alert("Cache has been updated successfully!");
   }
 });
 
@@ -211,22 +212,20 @@ function notifyUpdateAvailable() {
 }
 
 //=============================================================//
-// Periodically check for updates
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker
-    .register("/todo-app/service-worker.js") // Ensure the path to the service worker file is correct
-    .then((registration) => {
-      console.log("Service Worker registered with scope:", registration.scope);
-
-      // Once the service worker is registered, we can make periodic update checks
-      setInterval(() => {
-        registration.update();
-      }, 5 * 60 * 1000); // 60 * 60 * 1000 = Every hour (or as needed)
-    })
-    .catch((error) => {
-      console.error("Service Worker registration failed:", error);
+// When the update button is clicked, tell the service worker to update the cache
+function updateCache() {
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.ready.then((registration) => {
+      registration.active.postMessage("UPDATE_CACHE", [window]);
     });
+  }
 }
+
+// Button to trigger update
+document.querySelector(".update-button").addEventListener("click", () => {
+  updateCache();
+});
+
 //=============================================================//
 
 // Add help window functionality

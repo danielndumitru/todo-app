@@ -75,7 +75,7 @@ self.addEventListener("activate", (event) => {
             .then((clients) => {
               clients.forEach((client) => {
                 client.postMessage({
-                  type: "NEW_VERSION",
+                  type: "NEW_VERSION", // Notify clients about the new version
                   version: self.version,
                 });
               });
@@ -96,8 +96,10 @@ self.addEventListener("fetch", (event) => {
 
 // Listen for messages from the client
 self.addEventListener("message", (event) => {
-  if (event.data === "CHECK_VERSION") {
-    checkForUpdates();
+  if (event.data === "UPDATE_CACHE") {
+    // Trigger cache update
+    self.skipWaiting(); // Skip waiting for new version of the service worker
+    event.ports[0].postMessage({ type: "CACHE_UPDATED" }); // Notify the client that cache is being updated
   }
 });
 
