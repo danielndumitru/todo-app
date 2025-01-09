@@ -181,15 +181,18 @@ window.addEventListener("load", () => {
 });
 
 // 9. Listen for messages from the service worker about updates
+// Listen for messages from the service worker
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.addEventListener("message", (event) => {
-    if (event.data.type === "NEW_VERSION") {
-      // Update the version number in the UI only when the new version is activated
-      const versionElement = document.getElementById("version");
-      versionElement.innerText = event.data.version; // Update the displayed version
-      localStorage.setItem("appVersion", event.data.version); // Store the new version in localStorage
-      // Notify user that a new version is available
-      notifyUpdateAvailable();
+    if (event.data.type === "UPDATE_AVAILABLE") {
+      // Inform the user and reload the app automatically
+      if (
+        confirm(
+          "A new version is available. Reload the page to get the latest version?"
+        )
+      ) {
+        window.location.reload();
+      }
     }
   });
 }

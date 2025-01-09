@@ -14,7 +14,7 @@ const urlsToCache = [
   // Add other assets that need caching
 ];
 
-// Install event
+// Install event (caching assets and handling version)
 self.addEventListener("install", (event) => {
   event.waitUntil(
     fetch("./version.json")
@@ -22,21 +22,55 @@ self.addEventListener("install", (event) => {
       .then((data) => {
         const newVersion = data.cacheVersion; // Update to use cacheVersion
         self.version = newVersion; // Store the new version
+        return caches.open(CACHE_NAME).then((cache) => {
+          console.log("Opened cache");
+          return cache.addAll(urlsToCache).catch((error) => {
+            console.error("Failed to cache:", error);
+          });
+        });
+      })
+      .catch((error) => {
+        console.error("Failed to fetch version.json:", error);
       })
   );
 });
 
-// Activate event
+// Activate event (clear old caches and notify clients)
 self.addEventListener("activate", (event) => {
+  const currentCacheName = `${CACHE_NAME}-${self.version}`;
+
   event.waitUntil(
-    clients.claim().then(() => {
-      // Notify all clients about the new version only after activation
-      self.clients.matchAll({ includeUncontrolled: true }).then((clients) => {
-        clients.forEach((client) => {
-          client.postMessage({ type: "NEW_VERSION", version: self.version });
+    caches
+      .keys()
+      .then((cacheNames) => {
+        // Find and delete old caches that don't match the current version
+        const cachesToDelete = cacheNames.filter((cacheName) => {
+          return (
+            cacheName.startsWith(CACHE_NAME) && cacheName !== currentCacheName
+          );
         });
-      });
-    })
+        return Promise.all(
+          cachesToDelete.map((cacheName) => {
+            console.log("Deleting old cache:", cacheName);
+            return caches.delete(cacheName);
+          })
+        );
+      })
+      .then(() => {
+        // After clearing old caches, notify clients about the new version
+        self.clients.claim().then(() => {
+          self.clients
+            .matchAll({ includeUncontrolled: true })
+            .then((clients) => {
+              clients.forEach((client) => {
+                client.postMessage({
+                  type: "NEW_VERSION",
+                  version: self.version,
+                });
+              });
+            });
+        });
+      })
   );
 });
 
@@ -48,27 +82,6 @@ self.addEventListener("fetch", (event) => {
     })
   );
 });
-
-// Check for updates
-function checkForUpdates() {
-  fetch("./version.json", { cache: "no-store" })
-    .then((response) => response.json())
-    .then((data) => {
-      if (currentVersion && currentVersion !== data.version) {
-        // Notify all clients about the update
-        self.clients.matchAll().then((clients) => {
-          clients.forEach((client) => {
-            client.postMessage({
-              type: "UPDATE_AVAILABLE",
-              version: data.version,
-            });
-          });
-        });
-      }
-      currentVersion = data.version; // Update the current version variable
-    })
-    .catch((error) => console.error("Version check failed:", error));
-}
 
 // Listen for messages from the client
 self.addEventListener("message", (event) => {
@@ -91,3 +104,23 @@ self.addEventListener("install", (event) => {
 
 // Periodic version check
 setInterval(checkForUpdates, VERSION_CHECK_INTERVAL);
+
+function checkForUpdates() {
+  fetch("./version.json", { cache: "no-store" })
+    .then((response) => response.json())
+    .then((data) => {
+      if (currentVersion && currentVersion !== data.cacheVersion) {
+        // Notify all clients about the update
+        self.clients.matchAll().then((clients) => {
+          clients.forEach((client) => {
+            client.postMessage({
+              type: "UPDATE_AVAILABLE",
+              version: data.cacheVersion,
+            });
+          });
+        });
+      }
+      currentVersion = data.cacheVersion; // Update the current version variable
+    })
+    .catch((error) => console.error("Version check failed:", error));
+}
