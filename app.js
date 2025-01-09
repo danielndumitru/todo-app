@@ -123,6 +123,8 @@ window.addEventListener("beforeinstallprompt", (event) => {
 document
   .querySelector(".install-button")
   .addEventListener("click", async () => {
+    // Button to trigger update
+    updateCache();
     if (!deferredPrompt) return;
 
     try {
@@ -132,8 +134,7 @@ document
 
       // Clear the deferredPrompt
       deferredPrompt = null;
-      // Button to trigger update
-      updateCache();
+
       // Hide the install prompt
       installPromptContainer.classList.remove("show");
 
