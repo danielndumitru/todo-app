@@ -14,8 +14,10 @@ const urlsToCache = [
   // Add other assets that need caching
 ];
 
+// Ensure `self.version` has a fallback version
+self.version = self.version || "v1"; // Initialize with a fallback version if undefined
+
 // Install event (caching assets and handling version)
-// Combined install event handler with logs
 self.addEventListener("install", (event) => {
   event.waitUntil(
     fetch("./version.json")
@@ -98,18 +100,6 @@ self.addEventListener("message", (event) => {
     checkForUpdates();
   }
 });
-
-// If you continue to experience issues, consider adding some logging to your service worker to help debug:
-// self.addEventListener("install", (event) => {
-//   event.waitUntil(
-//     caches.open(CACHE_NAME).then((cache) => {
-//       console.log("Opened cache");
-//       return cache.addAll(urlsToCache).catch((error) => {
-//         console.error("Failed to cache:", error);
-//       });
-//     })
-//   );
-// });
 
 // Periodic version check
 function checkForUpdates() {

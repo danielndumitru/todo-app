@@ -1,7 +1,7 @@
 {
-  "version": "1.0.221",
+  "version": "1.0.222",
   "releaseNotes": "Added push notifications and update functionality",
   "minVersion": "1.0.0",
   "updateRequired": false,
-  "cacheVersion": "1.0.221"
+  "cacheVersion": "1.0.222"
 }
