@@ -18,22 +18,25 @@ const urlsToCache = [
 // Combined install event handler with logs
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    // Fetch version.json to get the version for this install
     fetch("./version.json")
       .then((response) => response.json())
       .then((data) => {
         const newVersion = data.cacheVersion; // Get version from version.json
-        self.version = newVersion; // Store the version
-        const currentCacheName = `${CACHE_NAME}-${self.version}`; // Cache name based on version
+        console.log("Fetched new version:", newVersion);
 
-        // Open the cache and add assets
-        return caches.open(currentCacheName).then((cache) => {
-          console.log("Opened cache:", currentCacheName);
-          console.log("Caching assets:", urlsToCache);
-          return cache.addAll(urlsToCache).catch((error) => {
-            console.error("Failed to cache:", error);
+        // Only update the version if it has changed
+        if (self.version !== newVersion) {
+          self.version = newVersion; // Store the new version
+          const currentCacheName = `${CACHE_NAME}-${self.version}`; // Cache name based on version
+
+          return caches.open(currentCacheName).then((cache) => {
+            console.log("Opened cache:", currentCacheName);
+            console.log("Caching assets:", urlsToCache);
+            return cache.addAll(urlsToCache).catch((error) => {
+              console.error("Failed to cache:", error);
+            });
           });
-        });
+        }
       })
       .catch((error) => {
         console.error("Failed to fetch version.json:", error);
@@ -43,7 +46,7 @@ self.addEventListener("install", (event) => {
 
 // Activate event (clear old caches and notify clients)
 self.addEventListener("activate", (event) => {
-  const currentCacheName = `${CACHE_NAME}-${self.version}`;
+  const currentCacheName = `${CACHE_NAME}-${self.version}`; // Use the updated version
 
   event.waitUntil(
     caches
@@ -123,8 +126,8 @@ function checkForUpdates() {
             });
           });
         });
+        currentVersion = data.cacheVersion; // Update the current version variable
       }
-      currentVersion = data.cacheVersion; // Update the current version variable
     })
     .catch((error) => console.error("Version check failed:", error));
 }
