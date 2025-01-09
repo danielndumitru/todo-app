@@ -132,7 +132,8 @@ document
 
       // Clear the deferredPrompt
       deferredPrompt = null;
-
+      // Button to trigger update
+      updateCache();
       // Hide the install prompt
       installPromptContainer.classList.remove("show");
 
@@ -222,9 +223,9 @@ function updateCache() {
 }
 
 // Button to trigger update
-document.querySelector(".update-button").addEventListener("click", () => {
-  updateCache();
-});
+// document.querySelector(".update-button").addEventListener("click", () => {
+//   updateCache();
+// });
 
 //=============================================================//
 
