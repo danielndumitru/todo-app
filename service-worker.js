@@ -15,15 +15,20 @@ const urlsToCache = [
 ];
 
 // Install event (caching assets and handling version)
+// Combined install event handler with logs
 self.addEventListener("install", (event) => {
   event.waitUntil(
     fetch("./version.json")
       .then((response) => response.json())
       .then((data) => {
-        const newVersion = data.cacheVersion; // Update to use cacheVersion
-        self.version = newVersion; // Store the new version
-        return caches.open(CACHE_NAME).then((cache) => {
-          console.log("Opened cache");
+        const newVersion = data.cacheVersion;
+        self.version = newVersion;
+        const currentCacheName = `${CACHE_NAME}-${self.version}`;
+
+        // Open the cache and add assets
+        return caches.open(currentCacheName).then((cache) => {
+          console.log("Opened cache:", currentCacheName);
+          console.log("Caching assets:", urlsToCache);
           return cache.addAll(urlsToCache).catch((error) => {
             console.error("Failed to cache:", error);
           });
